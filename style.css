@@ -18,7 +18,7 @@
   
   body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: url('assets/holi_lc_2.png') center/300% no-repeat scroll;
+    background: url('assets/holi_lc_2.png') center/500% no-repeat scroll;
     color: var(--text);
     line-height: 1.6;
     scroll-behavior: smooth;
@@ -83,8 +83,10 @@
   
   /* Hero section with background image cropped to center */
   .hero {
-    background: linear-gradient(135deg, #0f172a, #1e3a5f) center/cover no-repeat;
-    position: relative;
+    background-image: url('assets/holi_lc_2.png');
+    background-size: 500%;
+    background-position: center;
+    background-repeat: no-repeat;    position: relative;
     color: white;
     padding: 5rem 0 4rem;
     text-align: center;
