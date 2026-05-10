@@ -1,0 +1,303 @@
+/* ====== DARK SPACE THEME ====== */
+:root {
+    --bg-primary: #1a1a2e;
+    --bg-secondary: #16213e;
+    --surface: #0f3460;
+    --text: #e0e0e0;
+    --text-light: #b0b0b0;
+    --accent: #00bcd4;
+    --accent-glow: #00e5ff;
+    --border: #2a2a4a;
+  }
+  
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text);
+    line-height: 1.6;
+    scroll-behavior: smooth;
+  }
+  
+  a {
+    color: var(--accent);
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+  a:hover {
+    color: var(--accent-glow);
+    text-decoration: underline;
+  }
+  
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+  
+  /* Navigation */
+  nav {
+    background: var(--bg-secondary);
+    padding: 1rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.5);
+  }
+  nav .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  nav a {
+    color: var(--text);
+    margin: 0 15px;
+    font-weight: 500;
+  }
+  nav a:hover {
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .nav-links {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  @media (max-width: 600px) {
+    nav .container {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .nav-links {
+      margin-top: 10px;
+    }
+    nav a {
+      margin: 5px 10px 5px 0;
+    }
+  }
+  
+  /* Hero section with background image cropped to center */
+  .hero {
+    background: linear-gradient(135deg, #0f172a, #1e3a5f) center/cover no-repeat;
+    background-image: url('assets/holi_lc_2.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+    color: white;
+    padding: 5rem 0 4rem;
+    text-align: center;
+  }
+  
+  /* Dark overlay for text readability */
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(10, 10, 30, 0.65);
+    z-index: 1;
+  }
+  
+  .hero .container {
+    position: relative;
+    z-index: 2;
+  }
+  
+  .hero .profile-pic {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--accent);
+    background: #2c3e50;
+    margin-bottom: 20px;
+  }
+  
+  .hero h1 {
+    font-size: 2.8rem;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 0 15px rgba(0,188,212,0.5);
+  }
+  .hero h2 {
+    font-size: 1.4rem;
+    font-weight: 300;
+    opacity: 0.9;
+    margin-bottom: 0.5rem;
+  }
+  .hero p {
+    font-size: 1.1rem;
+    opacity: 0.85;
+  }
+  .hero .contact-icons {
+    margin-top: 1.5rem;
+  }
+  .hero .contact-icons a {
+    color: white;
+    font-size: 1.8rem;
+    margin: 0 12px;
+    transition: transform 0.3s, color 0.3s;
+  }
+  .hero .contact-icons a:hover {
+    transform: scale(1.15);
+    color: var(--accent);
+  }
+  
+  /* Sections */
+  section {
+    padding: 3.5rem 0;
+    background: var(--bg-primary);
+    border-bottom: 1px solid var(--border);
+  }
+  section:nth-child(even) {
+    background: var(--bg-secondary);
+  }
+  section h2 {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    color: var(--accent);
+    border-bottom: 3px solid var(--accent);
+    display: inline-block;
+    padding-bottom: 0.3rem;
+  }
+  
+  /* Grids */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+  @media (max-width: 768px) {
+    .grid-2 {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  /* About */
+  .about p {
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    color: var(--text);
+  }
+  .interest-list {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+  .interest-list li {
+    background: var(--surface);
+    color: var(--text);
+    padding: 0.3rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    border: 1px solid var(--accent);
+  }
+  
+  /* Timeline */
+  .timeline-item {
+    margin-bottom: 1.8rem;
+  }
+  .timeline-item h3 {
+    font-size: 1.3rem;
+    color: var(--accent);
+  }
+  .timeline-item .meta {
+    font-weight: 600;
+    color: var(--text-light);
+    margin-bottom: 0.3rem;
+  }
+  
+  /* Publications */
+  .publication {
+    margin-bottom: 1.5rem;
+    padding-left: 1rem;
+    border-left: 3px solid var(--accent);
+  }
+  .publication .pub-title {
+    font-weight: 700;
+    font-size: 1.05rem;
+    margin-bottom: 0.2rem;
+  }
+  .publication .pub-authors {
+    font-size: 0.9rem;
+    color: #b0b0b0;
+  }
+  .publication .pub-journal {
+    font-style: italic;
+    color: var(--text-light);
+    margin: 0.2rem 0;
+  }
+  .publication .pub-links a {
+    margin-right: 15px;
+    font-size: 0.9rem;
+  }
+  .author-highlight {
+    font-weight: 700;
+    color: white;
+  }
+  
+  /* Buttons */
+  .btn {
+    display: inline-block;
+    padding: 0.6rem 1.8rem;
+    background: var(--accent);
+    color: #0a0a1a;
+    font-weight: bold;
+    border-radius: 4px;
+    margin-top: 1rem;
+    transition: background 0.3s, transform 0.2s;
+  }
+  .btn:hover {
+    background: var(--accent-glow);
+    text-decoration: none;
+    transform: translateY(-2px);
+  }
+  
+  /* Skills cloud */
+  .skills-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    margin-top: 1rem;
+  }
+  .skill-tag {
+    background: var(--surface);
+    color: var(--text);
+    padding: 0.4rem 1.2rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    border: 1px solid var(--border);
+  }
+  
+  /* Talks */
+  .talk-item {
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+  }
+  .talk-item .talk-title {
+    font-weight: 600;
+  }
+  .talk-item .talk-venue {
+    color: var(--text-light);
+  }
+  
+  /* Footer */
+  footer {
+    background: #0b0b1a;
+    color: #888;
+    text-align: center;
+    padding: 1.5rem 0;
+    border-top: 1px solid var(--border);
+  }
+  footer a {
+    color: var(--accent);
+  }
