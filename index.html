@@ -1,5 +1,508 @@
----
-layout: home
-title: My website
-subtitle: This is where I will tell my friends way too much about me
----
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daniel Forero-Sánchez | Cosmologist</title>
+    <!-- Font Awesome 6 for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f9f9f9;
+            scroll-behavior: smooth;
+        }
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --light-bg: #ffffff;
+            --border: #e0e0e0;
+        }
+        a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .container {
+            max-width: 1100px;
+            margin: auto;
+            padding: 0 20px;
+        }
+        /* Navigation */
+        nav {
+            background: var(--primary);
+            color: white;
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        nav .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        nav a {
+            color: white;
+            margin: 0 15px;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+        nav a:hover {
+            opacity: 0.8;
+            text-decoration: none;
+        }
+        .nav-links {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        @media (max-width: 600px) {
+            nav .container {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .nav-links {
+                margin-top: 10px;
+            }
+            nav a {
+                margin: 5px 10px 5px 0;
+            }
+        }
+        /* Hero */
+        .hero {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 4rem 0 3rem;
+            text-align: center;
+        }
+        .hero .profile-pic {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid white;
+            margin-bottom: 20px;
+            background: #ddd;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .hero h1 {
+            font-size: 2.8rem;
+            margin-bottom: 0.5rem;
+        }
+        .hero h2 {
+            font-size: 1.4rem;
+            font-weight: 300;
+            opacity: 0.9;
+            margin-bottom: 1rem;
+        }
+        .hero .contact-icons {
+            margin-top: 1.5rem;
+        }
+        .hero .contact-icons a {
+            color: white;
+            font-size: 1.8rem;
+            margin: 0 10px;
+            transition: transform 0.3s;
+        }
+        .hero .contact-icons a:hover {
+            transform: scale(1.2);
+        }
+        /* Sections */
+        section {
+            padding: 3rem 0;
+            background: white;
+            border-bottom: 1px solid var(--border);
+        }
+        section:nth-child(even) {
+            background: #f4f7f9;
+        }
+        section h2 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            border-bottom: 3px solid var(--accent);
+            display: inline-block;
+            padding-bottom: 0.3rem;
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+        /* About */
+        .about p {
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+        .interest-list {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        .interest-list li {
+            background: var(--accent);
+            color: white;
+            padding: 0.3rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        /* Experience & Education */
+        .timeline-item {
+            margin-bottom: 1.8rem;
+        }
+        .timeline-item h3 {
+            font-size: 1.3rem;
+            color: var(--primary);
+        }
+        .timeline-item .meta {
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 0.3rem;
+        }
+        .timeline-item .meta i {
+            margin-right: 5px;
+            color: var(--accent);
+        }
+        /* Publications */
+        .publication {
+            margin-bottom: 1.5rem;
+            padding-left: 1rem;
+            border-left: 3px solid var(--accent);
+        }
+        .publication .pub-title {
+            font-weight: 700;
+            font-size: 1.05rem;
+            margin-bottom: 0.2rem;
+        }
+        .publication .pub-authors {
+            font-size: 0.9rem;
+            color: #555;
+        }
+        .publication .pub-journal {
+            font-style: italic;
+            color: #666;
+            margin: 0.2rem 0;
+        }
+        .publication .pub-links a {
+            margin-right: 15px;
+            font-size: 0.9rem;
+        }
+        .author-highlight {
+            font-weight: 700;
+            color: #000;
+        }
+        .btn {
+            display: inline-block;
+            padding: 0.6rem 1.5rem;
+            background: var(--accent);
+            color: white;
+            border-radius: 4px;
+            margin-top: 1rem;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #2980b9;
+            text-decoration: none;
+        }
+        /* Skills */
+        .skills-cloud {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.7rem;
+            margin-top: 1rem;
+        }
+        .skill-tag {
+            background: #ecf0f1;
+            padding: 0.4rem 1.2rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            border: 1px solid #d5d8dc;
+        }
+        /* Talks */
+        .talk-item {
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+        .talk-item .talk-title {
+            font-weight: 600;
+        }
+        .talk-item .talk-venue {
+            color: #555;
+        }
+        /* Footer */
+        footer {
+            background: var(--primary);
+            color: white;
+            text-align: center;
+            padding: 1.5rem 0;
+        }
+        footer a {
+            color: #f1c40f;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="container">
+            <a href="#" style="font-weight:bold; font-size:1.2rem;">Daniel Forero-Sánchez</a>
+            <div class="nav-links">
+                <a href="#about">About</a>
+                <a href="#research">Research</a>
+                <a href="#publications">Publications</a>
+                <a href="#teaching">Teaching</a>
+                <a href="#cv">CV</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <header class="hero">
+        <div class="container">
+            <!-- Placeholder profile image: replace with your own photo -->
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23bdc3c7'/%3E%3Ctext x='50' y='55' text-anchor='middle' fill='white' font-size='18' font-family='Arial' dy='.3em'%3EPhoto%3C/text%3E%3C/svg%3E" alt="Daniel Forero-Sánchez" class="profile-pic" id="profile-pic">
+            <h1>Daniel Forero-Sánchez</h1>
+            <h2>Postdoctoral Researcher in Cosmology</h2>
+            <p>Institut de Ciències del Cosmos, Universitat de Barcelona</p>
+            <div class="contact-icons">
+                <a href="mailto:daniel.forerosanchez@icc.ub.edu" title="Email"><i class="fas fa-envelope"></i></a>
+                <a href="https://orcid.org/0000-0001-5957-332X" target="_blank" title="ORCID"><i class="fab fa-orcid"></i></a>
+                <a href="#" title="GitHub (add your link)"><i class="fab fa-github"></i></a>
+                <a href="#" title="LinkedIn (add your link)"><i class="fab fa-linkedin"></i></a>
+            </div>
+        </div>
+    </header>
+
+    <!-- About Section -->
+    <section id="about">
+        <div class="container">
+            <h2>About Me</h2>
+            <div class="about">
+                <p>
+                    I am a postdoctoral researcher at the Institute of Cosmos Sciences (ICCUB) of the University of Barcelona. My research focuses on <strong>large-scale structure cosmology</strong> using data from spectroscopic surveys like DESI. I develop and apply fast mock simulations, covariance estimation methods, machine learning techniques, and novel clustering statistics to extract robust cosmological constraints.
+                </p>
+                <p>
+                    I earned my PhD in Physics from EPFL (Switzerland), where I worked on the sensitivity of void baryon acoustic oscillations to selection effects and created simulation-based models for the cosmic web. Before that, I completed a double BSc in Physics and Geoscience in Colombia.
+                </p>
+                <h3 style="margin-top:1.5rem;">Research Interests</h3>
+                <ul class="interest-list">
+                    <li>Cosmology</li><li>Large-Scale Structure</li><li>Spectroscopic Surveys</li><li>Machine Learning</li>
+                    <li>Computational Cosmology</li><li>Simulations</li><li>Mock Generation</li><li>Data Analysis</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Experience & Education -->
+    <section id="research">
+        <div class="container">
+            <h2>Experience & Education</h2>
+            <div class="grid-2">
+                <div>
+                    <h3 style="color: var(--primary); margin-bottom: 1rem;"><i class="fas fa-briefcase"></i> Positions</h3>
+                    <div class="timeline-item">
+                        <h3>Postdoctoral Researcher</h3>
+                        <div class="meta"><i class="far fa-calendar-alt"></i> 2024 – Present</div>
+                        <p>Institut de Ciències del Cosmos, Universitat de Barcelona</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h3>PhD Researcher & Doctoral Assistant</h3>
+                        <div class="meta"><i class="far fa-calendar-alt"></i> 2020 – 2024</div>
+                        <p>Laboratory of Astrophysics, EPFL, Switzerland</p>
+                    </div>
+                </div>
+                <div>
+                    <h3 style="color: var(--primary); margin-bottom: 1rem;"><i class="fas fa-graduation-cap"></i> Education</h3>
+                    <div class="timeline-item">
+                        <h3>Ph.D. in Physics</h3>
+                        <div class="meta"><i class="far fa-calendar-alt"></i> 2020 – 2024</div>
+                        <p>EPFL, Switzerland · Thesis: Cosmology with the Large Scale Structure from Spectroscopic Surveys</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h3>M.Sc. in Physics</h3>
+                        <div class="meta"><i class="far fa-calendar-alt"></i> 2018 – 2020</div>
+                        <p>EPFL, Switzerland · Thesis on robustness of void BAO</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h3>B.Sc. in Physics & B.Sc. in Geoscience</h3>
+                        <div class="meta"><i class="far fa-calendar-alt"></i> 2014 – 2018</div>
+                        <p>Universidad de los Andes, Colombia</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Selected Publications -->
+    <section id="publications">
+        <div class="container">
+            <h2>Selected Publications</h2>
+            <p style="margin-bottom: 1.5rem;">First-author papers are highlighted. See full list on <a href="https://orcid.org/0000-0001-5957-332X" target="_blank">ORCID <i class="fas fa-external-link-alt"></i></a>.</p>
+
+            <!-- Publications list manually curated from ORCID with first-author indicated -->
+            <div class="publication">
+                <div class="pub-title">Cosmological constraints from a joint DESI DR1 Full-Shape and DR2 BAO</div>
+                <div class="pub-authors"><span class="author-highlight">Forero-Sánchez, D.</span>; Gil-Marín, H.; Verde, L. et al.</div>
+                <div class="pub-journal">arXiv e-prints (2026)</div>
+                <div class="pub-links"><a href="https://arxiv.org/abs/" target="_blank">arXiv</a></div>
+            </div>
+
+            <div class="publication">
+                <div class="pub-title">Analytical and EZmock covariance validation for the DESI 2024 results</div>
+                <div class="pub-authors"><span class="author-highlight">D. Forero-Sánchez</span>; M. Rashkovetskyi; O. Alves et al.</div>
+                <div class="pub-journal">Journal of Cosmology and Astroparticle Physics (2025)</div>
+                <div class="pub-links"><a href="https://doi.org/10.1088/1475-7516/2025/04/001" target="_blank">DOI</a></div>
+            </div>
+
+            <div class="publication">
+                <div class="pub-title">Semi-analytical covariance matrices for two-point correlation function for DESI 2024 data</div>
+                <div class="pub-authors">M. Rashkovetskyi; <span class="author-highlight">D. Forero-Sánchez</span>; A. de Mattia et al.</div>
+                <div class="pub-journal">Journal of Cosmology and Astroparticle Physics (2025)</div>
+                <div class="pub-links"><a href="https://doi.org/10.1088/1475-7516/2025/01/123" target="_blank">DOI</a></div>
+            </div>
+
+            <div class="publication">
+                <div class="pub-title">CosmoMIA: cosmic web-based redshift space halo distribution</div>
+                <div class="pub-authors"><span class="author-highlight">D. Forero Sánchez</span>; F.-S. Kitaura; F. Sinigaglia; J.M. Coloma-Nadal; J.-P. Kneib</div>
+                <div class="pub-journal">Journal of Cosmology and Astroparticle Physics (2024)</div>
+                <div class="pub-links"><a href="https://doi.org/10.1088/1475-7516/2024/07/017" target="_blank">DOI</a> <a href="https://arxiv.org/abs/2402.09205" target="_blank">arXiv</a></div>
+            </div>
+
+            <div class="publication">
+                <div class="pub-title">A machine learning approach to correct for mass resolution effects in simulated halo clustering statistics</div>
+                <div class="pub-authors"><span class="author-highlight">Daniel Forero-Sánchez</span>; Chia-Hsun Chuang; Sergio Rodríguez-Torres; Gustavo Yepes; Stefan Gottlöber; Cheng Zhao</div>
+                <div class="pub-journal">Monthly Notices of the Royal Astronomical Society (2022)</div>
+                <div class="pub-links"><a href="https://doi.org/10.1093/mnras/stac1078" target="_blank">DOI</a></div>
+            </div>
+
+            <div class="publication">
+                <div class="pub-title">Cosmic void baryon acoustic oscillation measurement: evaluation of sensitivity to selection effects</div>
+                <div class="pub-authors"><span class="author-highlight">Forero-Sánchez, Daniel</span>; Zhao, Cheng; Tao, Charling; Chuang, Chia-Hsun; Kitaura, Francisco-Shu; Variu, Andrei; Tamone, Amélie; Kneib, Jean-Paul</div>
+                <div class="pub-journal">Monthly Notices of the Royal Astronomical Society (2022)</div>
+                <div class="pub-links"><a href="https://doi.org/10.1093/mnras/stac1234" target="_blank">DOI</a> <a href="https://arxiv.org/abs/2107.02950" target="_blank">arXiv</a></div>
+            </div>
+
+            <div class="publication">
+                <div class="pub-title">The stability of deep learning for 21cm foreground removal across various sky models and frequency-dependent systematics</div>
+                <div class="pub-authors">T Chen; M Bianco; E Tolley; M Spinelli; <span class="author-highlight">D Forero-Sanchez</span>; J P Kneib</div>
+                <div class="pub-journal">Monthly Notices of the Royal Astronomical Society (2024)</div>
+                <div class="pub-links"><a href="https://doi.org/10.1093/mnras/stae1118" target="_blank">DOI</a></div>
+            </div>
+
+            <p style="margin-top: 1rem;"><em>For a complete list including many DESI collaboration papers and conference proceedings, visit my ORCID profile.</em></p>
+        </div>
+    </section>
+
+    <!-- Selected Talks -->
+    <section>
+        <div class="container">
+            <h2>Selected Talks</h2>
+            <div class="talk-item">
+                <div class="talk-title">"Delaunay Triangulation Spheres as complementary tracers for new-era cosmological surveys"</div>
+                <div class="talk-venue">COSMO23, Madrid; DESI Summer Collab., Durham; EAS 2023, Krakow; WST Meeting, Vienna (2023)</div>
+            </div>
+            <div class="talk-item">
+                <div class="talk-title">"A new generation of fast mocks for covariance matrices"</div>
+                <div class="talk-venue">DESI Summer (Durham) and Winter (Cancun) Collaboration Meetings (2022–2023)</div>
+            </div>
+            <div class="talk-item">
+                <div class="talk-title">"Improving dark matter halo resolution for large scale structure analysis using machine learning"</div>
+                <div class="talk-venue">Cosmology in Colombia, Bogotá; EAS 2022, Valencia; Next-gen surveys workshop, Tenerife (2022)</div>
+            </div>
+            <div class="talk-item">
+                <div class="talk-title">"Emptiness vs. Incompleteness: Selection effects on void BAO"</div>
+                <div class="talk-venue">Next-gen surveys workshop, Tenerife (2022); Cosmology in Colombia (2020, 2021)</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Teaching & Outreach -->
+    <section id="teaching">
+        <div class="container">
+            <h2>Teaching & Advising</h2>
+            <div class="grid-2">
+                <div>
+                    <h3 style="color: var(--primary);"><i class="fas fa-chalkboard-teacher"></i> Student Supervision</h3>
+                    <ul style="margin-left: 1.5rem;">
+                        <li><strong>Master Thesis Co-supervision</strong> – "Denoising cosmological power spectra using Deep Learning" (Spring 2021)</li>
+                        <li><strong>Semester Project Supervision</strong> – "Direct cosmological parameter estimation from cosmic voids using neural networks" (Autumn 2022)</li>
+                        <li><strong>Student Research Project Co-supervision</strong> – "Effect of redshift measurement uncertainty on neutrino mass from LSS" (Autumn 2023)</li>
+                    </ul>
+                    <h3 style="color: var(--primary); margin-top:1.5rem;"><i class="fas fa-university"></i> Teaching Assistantships</h3>
+                    <p><strong>Doctoral Assistant, EPFL</strong> (2021–2023): Led exercise sessions for <em>General Physics for Life Science</em> and <em>Astrophysics IV</em>; final exam grading.</p>
+                    <p><strong>Teaching Assistant, Uniandes</strong> (2015–2018): Electromagnetism II, Quantum Mechanics I, Thermodynamics, Seismics & Seismology.</p>
+                </div>
+                <div>
+                    <h3 style="color: var(--primary);"><i class="fas fa-users"></i> Outreach</h3>
+                    <p><strong>Guided visits to the Geneva Observatory</strong> (2021–2024): Led public tours, gave educational presentations in astrophysics, facilitated Q&A sessions and virtual reality demonstrations.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Skills -->
+    <section>
+        <div class="container">
+            <h2>Skills</h2>
+            <div class="skills-cloud">
+                <span class="skill-tag">Python</span>
+                <span class="skill-tag">Julia</span>
+                <span class="skill-tag">C/C++</span>
+                <span class="skill-tag">Bash</span>
+                <span class="skill-tag">JAX</span>
+                <span class="skill-tag">TensorFlow</span>
+                <span class="skill-tag">PyTorch</span>
+                <span class="skill-tag">GPU Programming</span>
+                <span class="skill-tag">Parallel Computing</span>
+                <span class="skill-tag">Slurm/HPC</span>
+                <span class="skill-tag">Git</span>
+                <span class="skill-tag">Data Analysis</span>
+                <span class="skill-tag">Data Visualization</span>
+                <span class="skill-tag">Scientific Computing</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- CV Download -->
+    <section id="cv" style="text-align: center;">
+        <div class="container">
+            <h2>Curriculum Vitae</h2>
+            <p>Download my full CV as a PDF.</p>
+            <a href="CV No pub.pdf" class="btn" download><i class="fas fa-download"></i> Download CV (PDF)</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>© 2025 Daniel Forero-Sánchez · <a href="https://orcid.org/0000-0001-5957-332X" target="_blank">ORCID</a></p>
+        </div>
+    </footer>
+
+    <!-- Smooth scrolling for older browsers -->
+    <script>
+        // Smooth scroll already handled by CSS scroll-behavior; nothing else needed.
+        // Optionally add active nav highlighting on scroll if desired.
+    </script>
+</body>
+</html>
