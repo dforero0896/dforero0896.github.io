@@ -203,25 +203,38 @@
         (async function loadPublications() {
             const orcid = '0000-0001-5957-332X';
             const container = document.getElementById('publications-list');
+            console.log('Container found:', container); // should not be null
+        
             const firstAuthorNames = ['Forero-Sánchez', 'Forero-Sanchez', 'Forero Sánchez', 'Forero Sanchez'];
         
             try {
+                console.log('Step 1: Starting fetch...');
                 const proxyUrl = 'https://api.allorigins.win/get?url=';
                 const apiUrl = `https://pub.orcid.org/v3.0/${orcid}/works`;
-                const response = await fetch(proxyUrl + encodeURIComponent(apiUrl));
-                if (!response.ok) throw new Error('Proxy error');
+                const fetchUrl = proxyUrl + encodeURIComponent(apiUrl);
+                console.log('Fetch URL:', fetchUrl);
+        
+                const response = await fetch(fetchUrl);
+                console.log('Step 2: Fetch response status:', response.status);
+                if (!response.ok) throw new Error('Proxy error: ' + response.status);
+        
                 const proxyData = await response.json();
+                console.log('Step 3: Proxy data:', proxyData);
+        
                 const data = JSON.parse(proxyData.contents);
+                console.log('Step 4: Parsed ORCID data:', data);
         
                 const works = data.group
                     .map(group => group['work-summary'][0])
                     .filter(w => w)
                     .sort((a, b) => (b['publication-date']?.year?.value || 0) - (a['publication-date']?.year?.value || 0));
+                console.log('Step 5: Works array length:', works.length);
         
                 const selected = works.filter(w => {
                     const type = w.type;
                     return type === 'journal-article' || type === 'working-paper' || type === 'conference-paper';
                 }).slice(0, 15);
+                console.log('Step 6: Selected works:', selected.length);
         
                 if (selected.length === 0) {
                     container.innerHTML = '<p>No publications found.</p>';
@@ -229,10 +242,7 @@
                 }
         
                 // Log the first work to inspect author structure
-                console.log('Sample work:', selected[0]);
-                console.log('Contributors (if any):', selected[0]['contributors']);
-                console.log('Contributor (if any):', selected[0]['contributor']);
-                console.log('work-contributors (if any):', selected[0]['work-contributors']);
+                console.log('First work sample:', selected[0]);
         
                 let html = '';
                 selected.forEach(work => {
@@ -241,8 +251,9 @@
                     const pubYear = work['publication-date']?.year?.value || '';
                     const type = work.type;
         
-                    // Get authors – try multiple common paths
+                    // Try multiple paths for contributors
                     let contributors = work['contributors']?.['contributor'] || work['contributor'] || work['work-contributors']?.['contributor'] || [];
+                    console.log('Contributor array for', title, ':', contributors);
         
                     let authorHtml = '';
                     if (contributors.length > 0) {
@@ -280,10 +291,12 @@
                     `;
                 });
         
+                console.log('Step 7: HTML built, injecting...');
                 container.innerHTML = html;
+                console.log('Step 8: Injection done.');
         
             } catch (error) {
-                console.error('Failed to load publications:', error);
+                console.error('Step X: Failed:', error);
                 container.innerHTML = `
                     <p>Unable to load publications automatically. 
                     <a href="https://orcid.org/${orcid}" target="_blank">View my ORCID profile</a>.</p>
