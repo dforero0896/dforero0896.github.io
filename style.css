@@ -18,7 +18,7 @@
   
   body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: url('assets/holi_lc_2.png') center/500% no-repeat scroll;
+    background: url('assets/holi_lc_2.png') center/500% no-repeat fixed;
     color: var(--text);
     line-height: 1.6;
     scroll-behavior: smooth;
