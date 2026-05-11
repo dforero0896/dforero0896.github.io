@@ -51,7 +51,7 @@ async function main() {
             'Authorization': `Bearer ${ADS_API_KEY}`
         }
     });
-
+    console.log('Full metrics response:', JSON.stringify(metricsRes, null, 2));
     const metrics = metricsRes['indicators'] || {};
     const hIndex = metrics.h ? Math.round(metrics.h) : null;       // h-index
     const citationCount = metrics['citation stats']?.['total number of citations'] || null;
