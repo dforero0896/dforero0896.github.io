@@ -141,3 +141,67 @@
         widget.innerHTML = ''; // hide on failure
     }
 })();
+
+// ---------- CODE REPOSITORIES LOADER ----------
+(async function loadRepos() {
+    const container = document.getElementById('repos-list');
+    if (!container) return;
+    const INITIAL_COUNT = 6;   // change as you wish
+
+    try {
+        const res = await fetch('repos.json');
+        if (!res.ok) throw new Error('File not found');
+        const repos = await res.json();
+
+        if (repos.length === 0) {
+            container.innerHTML = '<p>No public repositories found.</p>';
+            return;
+        }
+
+        // Sort by stars descending (popularity) or by update date – your call
+        //repos.sort((a, b) => b.stars - a.stars);
+        repos.sort((a, b) => new Date(b.updated) - new Date(a.updated))
+
+        function renderRepos(list) {
+            let html = '';
+            list.forEach(repo => {
+                html += `
+                    <div class="repo-card">
+                        <div class="repo-name">
+                            <a href="${repo.url}" target="_blank"><i class="fas fa-code-branch"></i> ${repo.name}</a>
+                        </div>
+                        <div class="repo-description">${repo.description || 'No description yet.'}</div>
+                        <div class="repo-meta">
+                            <span><i class="fas fa-circle" style="color: #00bcd4; font-size:0.6rem;"></i> ${repo.language}</span>
+                            <span><i class="fas fa-star"></i> ${repo.stars}</span>
+                            <span><i class="far fa-clock"></i> Updated ${new Date(repo.updated).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            return html;
+        }
+
+        // Show initial subset
+        container.innerHTML = renderRepos(repos.slice(0, INITIAL_COUNT));
+
+        // "Show more" button if needed
+        if (repos.length > INITIAL_COUNT) {
+            const remaining = repos.length - INITIAL_COUNT;
+            const btnDiv = document.createElement('div');
+            btnDiv.style.textAlign = 'center';
+            btnDiv.style.marginTop = '1.5rem';
+            const btn = document.createElement('button');
+            btn.className = 'btn';
+            btn.textContent = `Show all ${repos.length} repositories (${remaining} more)`;
+            btn.addEventListener('click', () => {
+                container.innerHTML = renderRepos(repos);
+            });
+            btnDiv.appendChild(btn);
+            container.appendChild(btnDiv);
+        }
+    } catch (err) {
+        console.error('Repos load error:', err);
+        container.innerHTML = `<p>Unable to load repositories. <a href="https://github.com/dforero0896" target="_blank">Visit GitHub</a>.</p>`;
+    }
+})();

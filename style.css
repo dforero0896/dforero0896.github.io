@@ -328,6 +328,44 @@
 .stats-source a {
     color: var(--accent);
 }
+
+/* Repository cards */
+.repo-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 1rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.repo-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 188, 212, 0.15);
+}
+.repo-name {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+}
+.repo-name a {
+    color: var(--accent);
+}
+.repo-description {
+    font-size: 0.95rem;
+    color: #aaa;
+    margin-bottom: 0.8rem;
+    line-height: 1.4;
+}
+.repo-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    font-size: 0.85rem;
+    color: #999;
+}
+.repo-meta span i {
+    margin-right: 5px;
+}
   
   /* Footer */
   footer {
