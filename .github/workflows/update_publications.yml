@@ -26,8 +26,10 @@ jobs:
       - name: Run update script
         run: node scripts/update_publications.js
 
-      - name: Fetch stats from Semantic Scholar
-        run: node scripts/update_stats.js
+      - name: Fetch stats from ADS
+        env:
+          ADS_API_KEY: ${{ secrets.ADS_API_KEY }}
+        run: node scripts/update_ads_stats.js
 
       - name: Commit and push if changed
         run: |

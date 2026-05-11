@@ -108,7 +108,7 @@
                     <span class="stat-label">papers</span>
                 </div>
             </div>
-            <p class="stats-source"><a href="${authorUrl}" target="_blank">via Semantic Scholar <i class="fas fa-external-link-alt"></i></a></p>
+            <p class="stats-source"><a href="${authorUrl}" target="_blank">via ADS <i class="fas fa-external-link-alt"></i></a></p>
         `;
     } catch (err) {
         console.warn('Stats widget:', err.message);
