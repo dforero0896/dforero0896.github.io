@@ -200,92 +200,54 @@
         </div>
     </footer>
     <script>
-        (async function loadPublications() {
-            const orcid = '0000-0001-5957-332X';
+        (async function() {
             const container = document.getElementById('publications-list');
-            // First-author names (you can add variations)
             const firstAuthorNames = ['Forero-Sánchez', 'Forero-Sanchez', 'Forero Sánchez', 'Forero Sanchez'];
-            
+        
             try {
-                // Fetch works from the public ORCID API (no authentication needed)
-                const response = await fetch(`https://pub.orcid.org/v3.0/${orcid}/works`, {
-                    headers: { 'Accept': 'application/json' }   // ← This forces a JSON response
-                });
-                const data = await response.json();
-                
-                // Get the list of works (sorted newest first)
-                const works = data.group
-                    .map(group => group['work-summary'][0])
-                    .filter(w => w) // remove empty
-                    .sort((a, b) => (b['publication-date']?.year?.value || 0) - (a['publication-date']?.year?.value || 0));
-                
-                // Select a subset you want to show (e.g., top 12, or filter by type)
-                // Here we show all journal articles, working papers, and conference papers
-                const selected = works.filter(w => {
-                    const type = w.type;
-                    return type === 'journal-article' || type === 'working-paper' || type === 'conference-paper';
-                }).slice(0, 15);  // limit to 15 most recent
-                
-                if (selected.length === 0) {
+                const res = await fetch('publications.json');
+                if (!res.ok) throw new Error('File not found');
+                const publications = await res.json();
+        
+                if (publications.length === 0) {
                     container.innerHTML = '<p>No publications found.</p>';
                     return;
                 }
-                
+        
                 let html = '';
-                selected.forEach(work => {
-                    const title = work.title?.title?.value || 'Untitled';
-                    const journal = work['journal-title']?.value || '';
-                    const pubYear = work['publication-date']?.year?.value || '';
-                    const type = work.type;
-                    
-                    // Collect external identifiers (DOI, arXiv)
-                    const extIds = work['external-ids']?.['external-id'] || [];
-                    let doi = '', arxiv = '';
-                    extIds.forEach(id => {
-                        if (id['external-id-type'] === 'doi') doi = id['external-id-value'];
-                        if (id['external-id-type'] === 'arxiv') arxiv = id['external-id-value'];
-                    });
-                    
-                    // Build author list, highlight if you are first author
-                    const contributors = work['contributors']?.['contributor'] || [];
+                publications.forEach(pub => {
+                    const authors = pub.authors || [];
                     let authorHtml = '';
-                    if (contributors.length > 0) {
-                        const firstAuthor = contributors[0]['credit-name']?.value || '';
-                        const isFirstAuthor = firstAuthorNames.some(name => 
-                            firstAuthor.toLowerCase().includes(name.toLowerCase())
+                    if (authors.length > 0) {
+                        const first = authors[0];
+                        const isFirst = firstAuthorNames.some(name =>
+                            first.toLowerCase().includes(name.toLowerCase())
                         );
-                        // Show first author, maybe highlight, then "et al." if many
-                        const highlighted = isFirstAuthor ? `<span class="author-highlight">${firstAuthor}</span>` : firstAuthor;
-                        authorHtml = contributors.length > 1 
-                            ? `${highlighted} et al.` 
-                            : highlighted;
+                        authorHtml = isFirst
+                            ? `<span class="author-highlight">${first}</span>` + (authors.length > 1 ? ' et al.' : '')
+                            : first + (authors.length > 1 ? ' et al.' : '');
                     } else {
                         authorHtml = 'Unknown authors';
                     }
-                    
-                    // Build link buttons
-                    let linksHtml = '';
-                    if (doi) linksHtml += `<a href="https://doi.org/${doi}" target="_blank">DOI</a> `;
-                    if (arxiv) linksHtml += `<a href="https://arxiv.org/abs/${arxiv}" target="_blank">arXiv</a> `;
-                    if (!doi && !arxiv) linksHtml += `<a href="https://orcid.org/${orcid}" target="_blank">ORCID</a> `;
-                    
+        
+                    let links = '';
+                    if (pub.doi) links += `<a href="https://doi.org/${pub.doi}" target="_blank">DOI</a> `;
+                    if (pub.arxiv) links += `<a href="https://arxiv.org/abs/${pub.arxiv}" target="_blank">arXiv</a> `;
+                    if (!pub.doi && !pub.arxiv) links += `<a href="https://orcid.org/0000-0001-5957-332X" target="_blank">ORCID</a> `;
+        
                     html += `
                         <div class="publication">
-                            <div class="pub-title">${title}</div>
+                            <div class="pub-title">${pub.title}</div>
                             <div class="pub-authors">${authorHtml}</div>
-                            <div class="pub-journal">${journal} (${pubYear}) ${type}</div>
-                            <div class="pub-links">${linksHtml}</div>
+                            <div class="pub-journal">${pub.journal} (${pub.year})</div>
+                            <div class="pub-links">${links}</div>
                         </div>
                     `;
                 });
-                
                 container.innerHTML = html;
-            } catch (error) {
-                console.error('Failed to load publications from ORCID:', error);
-                container.innerHTML = `
-                    <p>Unable to load publications automatically. Please visit my 
-                    <a href="https://orcid.org/${orcid}" target="_blank">ORCID profile</a>.</p>
-                `;
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = `<p>Unable to load publications. <a href="https://orcid.org/0000-0001-5957-332X" target="_blank">View on ORCID</a>.</p>`;
             }
         })();
         </script>

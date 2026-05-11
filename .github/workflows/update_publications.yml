@@ -1,0 +1,37 @@
+name: Update Publications JSON
+
+on:
+  schedule:
+    # Runs every day at 03:00 UTC (adjust as you like)
+    - cron: '0 3 * * *'
+  # Allows manual triggering from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write       # Needed to push the updated file back
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main          # or your default branch
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20   # Fetch is built-in from Node 18+
+
+      - name: Run update script
+        run: node update_publications.js
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add publications.json
+          git diff --staged --quiet || (
+            git commit -m "Update publications.json [skip ci]"
+            git push
+          )
