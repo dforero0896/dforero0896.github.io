@@ -82,7 +82,7 @@
     if (!widget) return;
 
     const orcid = '0000-0001-5957-332X';
-    const apiUrl = `https://api.semanticscholar.org/graph/v1/author/ORCID:${orcid}?fields=hIndex,citationCount,paperCount,url`;
+    const apiUrl = `https://www.semanticscholar.org/author/Daniel-Felipe-Forero-Sanchez/2117707118?fields=hIndex,citationCount,paperCount,url`;
 
     try {
         const res = await fetch(apiUrl);
