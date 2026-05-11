@@ -202,21 +202,23 @@
     <script>
         (async function() {
             const container = document.getElementById('publications-list');
-            // All possible variations of your name as they might appear in the author list
+            // Variations of your name (lowercase for matching)
             const nameVariations = [
                 'forero-sánchez', 'forero-sanchez', 'forero sánchez', 'forero sanchez',
                 'd. forero', 'daniel forero'
             ];
+            // How many authors to display before "et al."
+            const maxAuthorsToShow = 5;   // Change this to 3, 10, etc.
         
-            // Helper: find the earliest index (0-based) where one of your names appears
+            // Helper: find your position in the full author list (0 = first)
             function authorPosition(authors) {
-                const lowerAuthors = authors.map(a => a.toLowerCase());
-                let minIndex = Infinity;
-                nameVariations.forEach(variant => {
-                    const idx = lowerAuthors.findIndex(a => a.includes(variant));
-                    if (idx !== -1 && idx < minIndex) minIndex = idx;
+                const lower = authors.map(a => a.toLowerCase());
+                let pos = -1;
+                nameVariations.forEach(v => {
+                    const idx = lower.findIndex(a => a.includes(v));
+                    if (idx !== -1 && (pos === -1 || idx < pos)) pos = idx;
                 });
-                return minIndex === Infinity ? -1 : minIndex;
+                return pos;
             }
         
             try {
@@ -229,35 +231,34 @@
                     return;
                 }
         
-                // Sort: group 0 = first author (pos 0), group 1 = within first 10 (1-9), group 2 = rest
-                // Within each group, sort by year descending
+                // Sort: first‑author papers first, then within‑first‑10, then rest; each group by year desc
                 publications.sort((a, b) => {
                     const posA = authorPosition(a.authors || []);
                     const posB = authorPosition(b.authors || []);
-        
                     const groupA = (posA === 0) ? 0 : (posA > 0 && posA < 10) ? 1 : 2;
                     const groupB = (posB === 0) ? 0 : (posB > 0 && posB < 10) ? 1 : 2;
-        
                     if (groupA !== groupB) return groupA - groupB;
-                    // Same group: newer year first
-                    const yearA = parseInt(a.year) || 0;
-                    const yearB = parseInt(b.year) || 0;
-                    return yearB - yearA;
+                    return (parseInt(b.year) || 0) - (parseInt(a.year) || 0);
                 });
         
                 let html = '';
                 publications.forEach(pub => {
                     const authors = pub.authors || [];
-                    let authorHtml = '';
+                    let authorHtml = 'Unknown authors';
+        
                     if (authors.length > 0) {
-                        const first = authors[0];
-                        // Highlight if you are first author
-                        const isFirst = nameVariations.some(v => first.toLowerCase().includes(v));
-                        authorHtml = isFirst
-                            ? `<span class="author-highlight">${first}</span>` + (authors.length > 1 ? ' et al.' : '')
-                            : first + (authors.length > 1 ? ' et al.' : '');
-                    } else {
-                        authorHtml = 'Unknown authors';
+                        // Take the first N authors
+                        const shown = authors.slice(0, maxAuthorsToShow);
+                        // Build highlighted spans for each shown author
+                        const highlighted = shown.map(name => {
+                            const lower = name.toLowerCase();
+                            const isYou = nameVariations.some(v => lower.includes(v));
+                            return isYou ? `<span class="author-highlight">${name}</span>` : name;
+                        });
+                        authorHtml = highlighted.join('; ');
+                        if (authors.length > maxAuthorsToShow) {
+                            authorHtml += ' et al.';
+                        }
                     }
         
                     let links = '';
