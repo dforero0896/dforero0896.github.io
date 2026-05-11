@@ -1326,18 +1326,6 @@
     "type": "working-paper"
   },
   {
-    "title": "Delaunay Triangulation Spheres as complementary tracers for new-era cosmological surveys",
-    "authors": [
-      "Forero-sánchez, Daniel",
-      "Zhao, Cheng"
-    ],
-    "journal": "EAS2023, European Astronomical Society Annual Meeting",
-    "year": "2023",
-    "doi": "",
-    "arxiv": "",
-    "type": "conference-paper"
-  },
-  {
     "title": "Cosmic void exclusion models and their impact on the distance scale measurements from large-scale structure",
     "authors": [
       "Andrei Variu",
@@ -1372,32 +1360,6 @@
     "doi": "10.1093/mnras/stac1268",
     "arxiv": "2107.02950",
     "type": "journal-article"
-  },
-  {
-    "title": "Emptiness vs. Incompleteness: Selection effects on Cosmic Void BAO measurements",
-    "authors": [
-      "Forero Sanchez, Daniel",
-      "Zhao, Cheng",
-      "Tao, Charling"
-    ],
-    "journal": "EAS2022, European Astronomical Society Annual Meeting",
-    "year": "2022",
-    "doi": "",
-    "arxiv": "",
-    "type": "conference-paper"
-  },
-  {
-    "title": "Improving halo catalog resolution with random forests and one-to-one halo matching",
-    "authors": [
-      "Forero Sanchez, Daniel",
-      "Chuang, Chia-Hsun",
-      "Rodríguez-Torres, Sergio"
-    ],
-    "journal": "EAS2022, European Astronomical Society Annual Meeting",
-    "year": "2022",
-    "doi": "",
-    "arxiv": "",
-    "type": "conference-paper"
   },
   {
     "title": "A machine learning approach to correct for mass resolution effects in simulated halo clustering statistics",
