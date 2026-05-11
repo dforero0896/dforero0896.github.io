@@ -7,7 +7,7 @@
         'forero-sánchez', 'forero-sanchez', 'forero sánchez', 'forero sanchez',
         'd. forero', 'daniel forero'
     ];
-    const maxAuthorsToShow = 5;
+    const maxAuthorsToShow = 8;
 
     // Number of publications to show initially
     const INITIAL_COUNT = 10;
