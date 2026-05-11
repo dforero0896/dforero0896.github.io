@@ -24,14 +24,17 @@ jobs:
           node-version: 20   # Fetch is built-in from Node 18+
 
       - name: Run update script
-        run: node update_publications.js
+        run: node scripts/update_publications.js
+
+            - name: Fetch stats from Semantic Scholar
+        run: node scripts/update_stats.js
 
       - name: Commit and push if changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add publications.json
+          git add publications.json stats.json
           git diff --staged --quiet || (
-            git commit -m "Update publications.json [skip ci]"
+            git commit -m "Update publications and stats [skip ci]"
             git push
           )
