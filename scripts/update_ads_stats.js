@@ -56,8 +56,8 @@ async function main() {
     console.log('Accessed metrics response:', JSON.stringify(metrics, null, 2));
     const hIndex = metrics.h ? Math.round(metrics.h) : null;       // h-index
     console.log('Accessed citations:', JSON.stringify(metrics['citation stats'], null, 2));
-    const citationCount = metrics['citation stats']?.['total number of citations'] || null;
-    const paperCount = metrics['basic stats']?.['number of papers'] || bibcodes.length;
+    const citationCount = metricsRes['citation stats']?.['total number of citations'] || null;
+    const paperCount = metricsRes['basic stats']?.['number of papers'] || bibcodes.length;
 
     const stats = {
         hIndex,
