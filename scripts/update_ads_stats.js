@@ -27,13 +27,13 @@ async function main() {
     let start = 0;
     const rows = 2000; // max allowed
     console.log(`Fetching bibcodes for query: ${QUERY}`);
-    
+
     while (true) {
         const url = `${BASE}/search/query?q=${encodeURIComponent(QUERY)}&fl=bibcode&rows=${rows}&start=${start}&sort=date%20desc`;
         const data = await fetchJSON(url);
         const docs = data.response?.docs || [];
         bibcodes.push(...docs.map(d => d.bibcode));
-        const numFound = data.response?.numFound || 0;
+        const numFound = data.response?.numFound || 0;  // ← FIXED
         console.log(`Retrieved ${bibcodes.length} of ${numFound} bibcodes...`);
         if (start + rows >= numFound) break;
         start += rows;
@@ -55,7 +55,7 @@ async function main() {
     const metrics = metricsRes['indicators'] || {};
     const hIndex = metrics.h ? Math.round(metrics.h) : null;       // h-index
     const citationCount = metrics['citation stats']?.citations || null; // total citations
-    const paperCount = metrics['basic stats']?.number of papers || bibcodes.length;
+    const paperCount = metrics['basic stats']?.['number of papers'] || bibcodes.length;
 
     const stats = {
         hIndex,
