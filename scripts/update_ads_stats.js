@@ -54,7 +54,7 @@ async function main() {
 
     const metrics = metricsRes['indicators'] || {};
     const hIndex = metrics.h ? Math.round(metrics.h) : null;       // h-index
-    const citationCount = metrics['citation stats']?.citations || null; // total citations
+    const citationCount = metrics['citation stats']?.['total number of citations'] || null;
     const paperCount = metrics['basic stats']?.['number of papers'] || bibcodes.length;
 
     const stats = {
