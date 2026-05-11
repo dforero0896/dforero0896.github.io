@@ -76,31 +76,22 @@
     }
 })();
 
-// ---------- ACADEMIC STATS WIDGET (Semantic Scholar) ----------
+// ---------- ACADEMIC STATS WIDGET (from static stats.json) ----------
 (async function loadStats() {
     const widget = document.getElementById('stats-widget');
     if (!widget) return;
 
-    const orcid = '0000-0001-5957-332X';
-    const apiUrl = `https://www.semanticscholar.org/author/Daniel-Felipe-Forero-Sanchez/2117707118?fields=hIndex,citationCount,paperCount,url`;
-
     try {
-        const res = await fetch(apiUrl);
-        if (!res.ok) {
-            console.warn('SS API status:', res.status);
-            throw new Error(`HTTP ${res.status}`);
-        }
+        const res = await fetch('stats.json');
+        if (!res.ok) throw new Error('Stats file not found');
         const data = await res.json();
-        console.log('SS data:', data); // Debug: see the full object
 
-        if (!data || data.error || typeof data.paperCount === 'undefined') {
-            throw new Error('Invalid or missing author data');
-        }
+        if (data.error) throw new Error('Stats unavailable');
 
         const hIndex = data.hIndex ?? '—';
         const citationCount = data.citationCount ?? '—';
         const paperCount = data.paperCount ?? '—';
-        const authorUrl = data.url || `https://www.semanticscholar.org/author/${data.authorId}`;
+        const authorUrl = data.authorUrl || 'https://www.semanticscholar.org/';
 
         widget.innerHTML = `
             <div class="stats-grid">
@@ -120,8 +111,7 @@
             <p class="stats-source"><a href="${authorUrl}" target="_blank">via Semantic Scholar <i class="fas fa-external-link-alt"></i></a></p>
         `;
     } catch (err) {
-        console.error('Stats widget error:', err);
-        // Hide widget if data can't be loaded – it degrades gracefully
-        widget.innerHTML = '';
+        console.warn('Stats widget:', err.message);
+        widget.innerHTML = ''; // hide on failure
     }
 })();
