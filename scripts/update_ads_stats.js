@@ -8,46 +8,62 @@ if (!ADS_API_KEY) {
 }
 
 const BASE = 'https://api.adsabs.harvard.edu/v1';
-const ORCID = '0000-0001-5957-332X';
+const QUERY = 'orcid:0000-0001-5957-332X';
 
-async function fetchMetrics() {
-    const body = JSON.stringify({
-        query: `orcid:${ORCID}`,
-        types: ["h"]           // explicitly request h-index; other stats come by default
+async function fetchJSON(url, options = {}) {
+    const res = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${ADS_API_KEY}`, 'Accept': 'application/json' },
+        ...options
     });
-
-    const res = await fetch(`${BASE}/metrics`, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${ADS_API_KEY}`,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        },
-        body
-    });
-
     if (!res.ok) {
-        throw new Error(`ADS metrics error ${res.status}: ${await res.text()}`);
+        throw new Error(`ADS API error ${res.status}: ${await res.text()}`);
     }
     return res.json();
 }
 
 async function main() {
-    const data = await fetchMetrics();
-    console.log('Metrics response:', JSON.stringify(data, null, 2));
+    // 1. Get all bibcodes for the author (paginated, max 2000)
+    let bibcodes = [];
+    let start = 0;
+    const rows = 2000; // max allowed
+    console.log(`Fetching bibcodes for query: ${QUERY}`);
 
-    // The response is flat: { "h": 12, "citation stats": { "total number of citations": 4635 }, ... }
-    const hIndex = data.h ?? null;
-    const citationStats = data['citation stats'] || {};
-    const citationCount = citationStats['total number of citations'] || null;
-    const basicStats = data['basic stats'] || {};
-    const paperCount = basicStats['number of papers'] || null;
+    while (true) {
+        const url = `${BASE}/search/query?q=${encodeURIComponent(QUERY)}&fl=bibcode&rows=${rows}&start=${start}&sort=date%20desc`;
+        const data = await fetchJSON(url);
+        const docs = data.response?.docs || [];
+        bibcodes.push(...docs.map(d => d.bibcode));
+        const numFound = data.response?.numFound || 0;  // ← FIXED
+        console.log(`Retrieved ${bibcodes.length} of ${numFound} bibcodes...`);
+        if (start + rows >= numFound) break;
+        start += rows;
+    }
+
+    console.log(`Total bibcodes collected: ${bibcodes.length}`);
+
+    // 2. Get metrics (h-index, total citations) using POST /v1/metrics
+    const metricsUrl = `${BASE}/metrics`;
+    const metricsRes = await fetchJSON(metricsUrl, {
+        method: 'POST',
+        body: JSON.stringify({ bibcodes: bibcodes }),
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${ADS_API_KEY}`
+        }
+    });
+    console.log('Full metrics response:', JSON.stringify(metricsRes, null, 2));
+    const metrics = metricsRes['indicators'] || {};
+    console.log('Accessed metrics response:', JSON.stringify(metrics, null, 2));
+    const hIndex = metrics.h ? Math.round(metrics.h) : null;       // h-index
+    console.log('Accessed citations:', JSON.stringify(metrics['citation stats'], null, 2));
+    const citationCount = metrics['citation stats']?.['total number of citations'] || null;
+    const paperCount = metrics['basic stats']?.['number of papers'] || bibcodes.length;
 
     const stats = {
         hIndex,
         citationCount,
         paperCount,
-        authorUrl: `https://ui.adsabs.harvard.edu/search/q=orcid%3A${ORCID}&sort=date%20desc`,
+        authorUrl: `https://ui.adsabs.harvard.edu/search/q=${encodeURIComponent(QUERY)}&sort=date%20desc`,
         updated: new Date().toISOString()
     };
 
