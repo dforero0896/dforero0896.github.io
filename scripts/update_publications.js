@@ -21,7 +21,7 @@ async function main() {
         const workSummary = group['work-summary'][0];
         if (!workSummary) continue;
         const type = workSummary.type;
-        if (!['journal-article', 'working-paper', 'conference-paper'].includes(type)) continue;
+        if (!['journal-article', 'working-paper', 'preprint'].includes(type)) continue;
 
         // Get detail for full author list
         // The work summary contains a 'path' field like "/0000-0001-5957-332X/work/123456"

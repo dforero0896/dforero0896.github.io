@@ -8,7 +8,7 @@
         'forero-sánchez', 'forero-sanchez', 'forero sánchez', 'forero sanchez',
         'd. forero', 'daniel forero'
     ];
-    const maxAuthorsToShow = 5;   // Adjust as needed
+    const maxAuthorsToShow = 7;   // Adjust as needed
 
     function authorPosition(authors) {
         const lower = authors.map(a => a.toLowerCase());
