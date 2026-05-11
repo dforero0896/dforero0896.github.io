@@ -79,18 +79,23 @@
 // ---------- ACADEMIC STATS WIDGET (Semantic Scholar) ----------
 (async function loadStats() {
     const widget = document.getElementById('stats-widget');
-    if (!widget) return; // No widget container, skip
+    if (!widget) return;
 
-    // ORCID-based lookup: Semantic Scholar author endpoint
     const orcid = '0000-0001-5957-332X';
-    const apiUrl = `https://api.semanticscholar.org/graph/v1/author/ORCID:${orcid}`;
+    const apiUrl = `https://api.semanticscholar.org/graph/v1/author/ORCID:${orcid}?fields=hIndex,citationCount,paperCount,url`;
 
     try {
         const res = await fetch(apiUrl);
-        if (!res.ok) throw new Error(`Semantic Scholar HTTP ${res.status}`);
+        if (!res.ok) {
+            console.warn('SS API status:', res.status);
+            throw new Error(`HTTP ${res.status}`);
+        }
         const data = await res.json();
+        console.log('SS data:', data); // Debug: see the full object
 
-        if (!data || !data.paperCount) throw new Error('No author data');
+        if (!data || data.error || typeof data.paperCount === 'undefined') {
+            throw new Error('Invalid or missing author data');
+        }
 
         const hIndex = data.hIndex ?? '—';
         const citationCount = data.citationCount ?? '—';
@@ -115,7 +120,8 @@
             <p class="stats-source"><a href="${authorUrl}" target="_blank">via Semantic Scholar <i class="fas fa-external-link-alt"></i></a></p>
         `;
     } catch (err) {
-        console.warn('Stats widget failed:', err);
-        widget.innerHTML = ''; // Hide gracefully if fetching fails
+        console.error('Stats widget error:', err);
+        // Hide widget if data can't be loaded – it degrades gracefully
+        widget.innerHTML = '';
     }
 })();
