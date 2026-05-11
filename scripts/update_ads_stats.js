@@ -8,7 +8,7 @@ if (!ADS_API_KEY) {
 }
 
 const BASE = 'https://api.adsabs.harvard.edu/v1';
-const QUERY = 'author:"Forero-Sanchez, Daniel"'; // exact ADS author search syntax
+const QUERY = 'orcid:0000-0001-5957-332X';
 
 async function fetchJSON(url, options = {}) {
     const res = await fetch(url, {
