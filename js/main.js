@@ -205,3 +205,19 @@
         container.innerHTML = `<p>Unable to load repositories. <a href="https://github.com/dforero0896" target="_blank">Visit GitHub</a>.</p>`;
     }
 })();
+// ---------- PROFILE PICTURE LOADER ----------
+(async function loadProfilePic() {
+    const img = document.getElementById('hero-avatar');
+    if (!img) return;
+
+    try {
+        const res = await fetch('profile.json');
+        if (!res.ok) throw new Error('Profile file not found');
+        const profile = await res.json();
+        if (profile.avatar_url) {
+            img.src = profile.avatar_url;
+        }
+    } catch (err) {
+        console.warn('Could not load GitHub avatar, keeping placeholder:', err.message);
+    }
+})();

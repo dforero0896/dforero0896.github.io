@@ -35,12 +35,17 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: node scripts/update_repos.js
+      
+      - name: Fetch GitHub profile
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: node scripts/update_profile.js
 
       - name: Commit and push if changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add publications.json stats.json repos.json
+          git add publications.json stats.json repos.json profile.json
           git diff --staged --quiet || (
             git commit -m "Update publications and stats [skip ci]"
             git push
