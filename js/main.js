@@ -1,16 +1,15 @@
 // js/main.js
 
 // ---------- PUBLICATIONS LOADER (with “Show more” button) ----------
+// ---------- PUBLICATIONS LOADER (with author expansion) ----------
 (async function loadPublications() {
     const container = document.getElementById('publications-list');
     const nameVariations = [
         'forero-sánchez', 'forero-sanchez', 'forero sánchez', 'forero sanchez',
         'd. forero', 'daniel forero'
     ];
-    const maxAuthorsToShow = 8;
-
-    // Number of publications to show initially
-    const INITIAL_COUNT = 10;
+    const maxAuthorsToShow = 7;
+    const INITIAL_COUNT = 10;   // number of publications initially visible
 
     function authorPosition(authors) {
         const lower = authors.map(a => a.toLowerCase());
@@ -32,7 +31,7 @@
             return;
         }
 
-        // Sort: first-author → within first 10 → rest, each group by year desc
+        // Sort: first-author → within first 10 → rest; each group by year desc
         allWorks.sort((a, b) => {
             const posA = authorPosition(a.authors || []);
             const posB = authorPosition(b.authors || []);
@@ -42,21 +41,46 @@
             return (parseInt(b.year) || 0) - (parseInt(a.year) || 0);
         });
 
-        // Helper to render an array of works to HTML
         function renderWorks(works) {
             let html = '';
             works.forEach(pub => {
                 const authors = pub.authors || [];
-                let authorHtml = 'Unknown authors';
+                let authorHtml = '';
+                let expandHtml = '';
+
                 if (authors.length > 0) {
+                    // Build abbreviated author list (first maxAuthorsToShow)
                     const shown = authors.slice(0, maxAuthorsToShow);
-                    const highlighted = shown.map(name => {
+                    const highlightedShort = shown.map(name => {
                         const lower = name.toLowerCase();
                         const isYou = nameVariations.some(v => lower.includes(v));
                         return isYou ? `<span class="author-highlight">${name}</span>` : name;
-                    });
-                    authorHtml = highlighted.join('; ');
-                    if (authors.length > maxAuthorsToShow) authorHtml += ' et al.';
+                    }).join('; ');
+
+                    authorHtml = highlightedShort;
+                    if (authors.length > maxAuthorsToShow) {
+                        authorHtml += ' et al.';
+                        // Prepare full author list (hidden)
+                        const highlightedFull = authors.map(name => {
+                            const lower = name.toLowerCase();
+                            const isYou = nameVariations.some(v => lower.includes(v));
+                            return isYou ? `<span class="author-highlight">${name}</span>` : name;
+                        }).join('; ');
+
+                        // We'll use a unique id for each publication based on its DOI or title
+                        const pubId = (pub.doi || pub.title).replace(/\W/g, '_');
+                        expandHtml = `
+                            <div class="author-expand">
+                                <button class="author-toggle" data-target="authors-${pubId}">
+                                    Show all ${authors.length} authors <i class="fas fa-chevron-down"></i>
+                                </button>
+                                <span id="authors-${pubId}" class="full-authors" style="display:none;">
+                                    ${highlightedFull}
+                                </span>
+                            </div>`;
+                    }
+                } else {
+                    authorHtml = 'Unknown authors';
                 }
 
                 let links = '';
@@ -67,7 +91,10 @@
                 html += `
                     <div class="publication">
                         <div class="pub-title">${pub.title}</div>
-                        <div class="pub-authors">${authorHtml}</div>
+                        <div class="pub-authors">
+                            ${authorHtml}
+                            ${expandHtml}
+                        </div>
                         <div class="pub-journal">${pub.journal} (${pub.year})</div>
                         <div class="pub-links">${links}</div>
                     </div>
@@ -77,25 +104,44 @@
         }
 
         // Render initial subset
-        const initialWorks = allWorks.slice(0, INITIAL_COUNT);
-        let html = renderWorks(initialWorks);
+        let html = renderWorks(allWorks.slice(0, INITIAL_COUNT));
         container.innerHTML = html;
+        attachAuthorToggleEvents(); // bind click handlers after rendering
 
-        // Add “Show more” button if there are more to show
+        // "Show more" publications button
         if (allWorks.length > INITIAL_COUNT) {
             const remaining = allWorks.length - INITIAL_COUNT;
-            const buttonContainer = document.createElement('div');
-            buttonContainer.style.textAlign = 'center';
-            buttonContainer.style.marginTop = '1.5rem';
-            const button = document.createElement('button');
-            button.className = 'btn';          // reuse your existing button style
-            button.textContent = `Show all ${allWorks.length} publications (${remaining} more)`;
-            button.addEventListener('click', () => {
-                // Replace content with the full list and remove the button
+            const btnDiv = document.createElement('div');
+            btnDiv.style.textAlign = 'center';
+            btnDiv.style.marginTop = '1.5rem';
+            const btn = document.createElement('button');
+            btn.className = 'btn';
+            btn.textContent = `Show all ${allWorks.length} publications (${remaining} more)`;
+            btn.addEventListener('click', () => {
                 container.innerHTML = renderWorks(allWorks);
+                attachAuthorToggleEvents(); // rebind after replacing HTML
             });
-            buttonContainer.appendChild(button);
-            container.appendChild(buttonContainer);
+            btnDiv.appendChild(btn);
+            container.appendChild(btnDiv);
+        }
+
+        // Function to attach event listeners to all toggle buttons
+        function attachAuthorToggleEvents() {
+            document.querySelectorAll('.author-toggle').forEach(button => {
+                button.addEventListener('click', function () {
+                    const targetId = this.getAttribute('data-target');
+                    const fullList = document.getElementById(targetId);
+                    if (fullList) {
+                        if (fullList.style.display === 'none') {
+                            fullList.style.display = 'inline';
+                            this.innerHTML = 'Show less <i class="fas fa-chevron-up"></i>';
+                        } else {
+                            fullList.style.display = 'none';
+                            this.innerHTML = `Show all ${fullList.innerText.split(';').length} authors <i class="fas fa-chevron-down"></i>`;
+                        }
+                    }
+                });
+            });
         }
     } catch (err) {
         console.error('Publications load error:', err);
