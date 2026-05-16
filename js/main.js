@@ -149,43 +149,77 @@
     }
 })();
 // ---------- ACADEMIC STATS WIDGET (from static stats.json) ----------
+// ---------- ACADEMIC STATS WIDGET (with count-up animation) ----------
 (async function loadStats() {
     const widget = document.getElementById('stats-widget');
     if (!widget) return;
 
+    // 1. Load data from stats.json and publications.json (same as before)
+    let hIndex = '—', citationCount = '—', authorUrl = 'https://www.semanticscholar.org/';
     try {
-        const res = await fetch('stats.json');
-        if (!res.ok) throw new Error('Stats file not found');
-        const data = await res.json();
+        const s2Res = await fetch('stats.json');
+        if (s2Res.ok) {
+            const s2Data = await s2Res.json();
+            if (!s2Data.error) {
+                hIndex = s2Data.hIndex ?? '—';
+                citationCount = s2Data.citationCount ?? '—';
+                authorUrl = s2Data.authorUrl || authorUrl;
+            }
+        }
+    } catch (e) {}
 
-        if (data.error) throw new Error('Stats unavailable');
+    let paperCount = '—';
+    try {
+        const pubRes = await fetch('publications.json');
+        if (pubRes.ok) {
+            const pubs = await pubRes.json();
+            paperCount = Array.isArray(pubs) ? pubs.length : '—';
+        }
+    } catch (e) {}
 
-        const hIndex = data.hIndex ?? '—';
-        const citationCount = data.citationCount ?? '—';
-        const paperCount = data.paperCount ?? '—';
-        const authorUrl = data.authorUrl || 'https://www.semanticscholar.org/';
-
-        widget.innerHTML = `
-            <div class="stats-grid">
-                <div class="stat">
-                    <span class="stat-number">${hIndex}</span>
-                    <span class="stat-label">h-index</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-number">${citationCount}</span>
-                    <span class="stat-label">citations</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-number">${paperCount}</span>
-                    <span class="stat-label">papers</span>
-                </div>
+    // 2. Build widget HTML with data-value attributes for animation
+    widget.innerHTML = `
+        <div class="stats-grid">
+            <div class="stat">
+                <span class="stat-number count-up" data-target="${hIndex}">0</span>
+                <span class="stat-label">h-index</span>
             </div>
-            <p class="stats-source"><a href="${authorUrl}" target="_blank">via ADS <i class="fas fa-external-link-alt"></i></a></p>
-        `;
-    } catch (err) {
-        console.warn('Stats widget:', err.message);
-        widget.innerHTML = ''; // hide on failure
-    }
+            <div class="stat">
+                <span class="stat-number count-up" data-target="${citationCount}">0</span>
+                <span class="stat-label">citations</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number count-up" data-target="${paperCount}">0</span>
+                <span class="stat-label">papers</span>
+            </div>
+        </div>
+        <p class="stats-source"><a href="${authorUrl}" target="_blank">via ADS</a> · paper count from <a href="https://orcid.org/0000-0001-5957-332X" target="_blank">ORCID</a></p>
+    `;
+
+    // 3. Animate counters when they scroll into view
+    const counters = widget.querySelectorAll('.count-up');
+    const observer = new IntersectionObserver((entries, obs) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const el = entry.target;
+                const target = parseInt(el.getAttribute('data-target'), 10);
+                if (isNaN(target)) return;
+                let current = 0;
+                const increment = target / 50; // smooth 50 steps
+                const timer = setInterval(() => {
+                    current += increment;
+                    if (current >= target) {
+                        el.textContent = target;
+                        clearInterval(timer);
+                    } else {
+                        el.textContent = Math.floor(current);
+                    }
+                }, 20);
+                obs.unobserve(el);
+            }
+        });
+    }, { threshold: 0.5 });
+    counters.forEach(counter => observer.observe(counter));
 })();
 
 // ---------- CODE REPOSITORIES LOADER ----------

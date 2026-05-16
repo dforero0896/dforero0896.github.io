@@ -401,3 +401,55 @@
   color: #ccc;
   margin-left: 0.3rem;
 }
+/* ---------- Vertical Timeline ---------- */
+.timeline {
+  position: relative;
+  padding-left: 2.5rem;
+  margin: 2rem 0;
+}
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 1rem;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background: var(--accent);
+  opacity: 0.3;
+}
+.timeline-item {
+  position: relative;
+  margin-bottom: 2.5rem;
+}
+.timeline-item:last-child {
+  margin-bottom: 0;
+}
+.timeline-icon {
+  position: absolute;
+  left: -2.5rem;
+  top: 0.2rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  background: var(--surface);
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  font-size: 1rem;
+}
+.timeline-content h3 {
+  font-size: 1.3rem;
+  color: var(--accent);
+  margin-bottom: 0.2rem;
+}
+.timeline-content .meta {
+  font-weight: 600;
+  color: var(--text-light);
+  margin-bottom: 0.3rem;
+}
+.timeline-content p {
+  color: var(--text);
+  font-size: 0.95rem;
+}
