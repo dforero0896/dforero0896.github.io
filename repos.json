@@ -1,11 +1,19 @@
 [
   {
+    "name": "pyfcfc",
+    "description": "Python wrapper for the FCFC code for fast two-point correlation function computation.",
+    "language": "C",
+    "stars": 5,
+    "url": "https://github.com/dforero0896/pyfcfc",
+    "updated": "2026-06-07T21:10:43Z"
+  },
+  {
     "name": "dforero0896.github.io",
     "description": "",
     "language": "JavaScript",
     "stars": 0,
     "url": "https://github.com/dforero0896/dforero0896.github.io",
-    "updated": "2026-06-06T06:33:12Z"
+    "updated": "2026-06-07T07:08:34Z"
   },
   {
     "name": "geofptax",
@@ -22,14 +30,6 @@
     "stars": 1,
     "url": "https://github.com/dforero0896/jax-powspec",
     "updated": "2025-09-15T05:32:41Z"
-  },
-  {
-    "name": "pyfcfc",
-    "description": "Python wrapper for the FCFC code for fast two-point correlation function computation.",
-    "language": "C",
-    "stars": 4,
-    "url": "https://github.com/dforero0896/pyfcfc",
-    "updated": "2024-11-22T03:21:06Z"
   },
   {
     "name": "dforero0896",
