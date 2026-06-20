@@ -1,19 +1,19 @@
 [
   {
+    "name": "dforero0896.github.io",
+    "description": "",
+    "language": "JavaScript",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/dforero0896.github.io",
+    "updated": "2026-06-19T08:35:40Z"
+  },
+  {
     "name": "geofptax",
     "description": "JAX implementation of GEO-FPT model for the bispectrum of galaxy surveys.",
     "language": "C",
     "stars": 0,
     "url": "https://github.com/dforero0896/geofptax",
     "updated": "2026-06-18T09:18:47Z"
-  },
-  {
-    "name": "dforero0896.github.io",
-    "description": "",
-    "language": "JavaScript",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/dforero0896.github.io",
-    "updated": "2026-06-18T08:11:36Z"
   },
   {
     "name": "pyfcfc",
