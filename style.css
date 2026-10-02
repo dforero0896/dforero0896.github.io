@@ -453,3 +453,17 @@
   color: var(--text);
   font-size: 0.95rem;
 }
+/* Fork badge (distinct from Owner and Contributor) */
+.repo-badge-fork {
+  background: transparent;
+  border: 1px dashed #888;
+  color: #aaa;
+}
+.repo-fork-note {
+  font-size: 0.8rem;
+  color: #888;
+  margin-bottom: 0.5rem;
+}
+.repo-fork-note a {
+  color: var(--accent);
+}

@@ -245,11 +245,29 @@
         function renderRepos(list) {
             let html = '';
             list.forEach(repo => {
+                let badge = '';
+                let forkNote = '';
+
+                if (repo.isFork) {
+                    badge = `<span class="repo-badge repo-badge-fork">Fork</span>`;
+                    if (repo.parent) {
+                        forkNote = `<div class="repo-fork-note">forked from <a href="https://github.com/${repo.parent}" target="_blank">${repo.parent}</a></div>`;
+                    }
+                } else if (repo.isOwn) {
+                    badge = `<span class="repo-badge repo-badge-own">Owner</span>`;
+                } else {
+                    badge = `<span class="repo-badge repo-badge-contrib">Contributor · ${repo.commits} commits</span>`;
+                }
+
                 html += `
                     <div class="repo-card">
                         <div class="repo-name">
-                            <a href="${repo.url}" target="_blank"><i class="fas fa-code-branch"></i> ${repo.name}</a>
+                            <a href="${repo.url}" target="_blank">
+                                <i class="fas fa-code-branch"></i> ${repo.owner}/${repo.name}
+                            </a>
+                            ${badge}
                         </div>
+                        ${forkNote}
                         <div class="repo-description">${repo.description || 'No description yet.'}</div>
                         <div class="repo-meta">
                             <span><i class="fas fa-circle" style="color: #00bcd4; font-size:0.6rem;"></i> ${repo.language}</span>
@@ -261,7 +279,6 @@
             });
             return html;
         }
-
         // Show initial subset
         container.innerHTML = renderRepos(repos.slice(0, INITIAL_COUNT));
 
