@@ -1,11 +1,15 @@
 [
   {
-    "name": "dforero0896.github.io",
-    "description": "",
-    "language": "JavaScript",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/dforero0896.github.io",
-    "updated": "2026-10-01T09:54:52Z"
+    "name": "pyfcfc",
+    "description": "Python wrapper for the FCFC code for fast two-point correlation function computation.",
+    "language": "C",
+    "stars": 5,
+    "url": "https://github.com/dforero0896/pyfcfc",
+    "updated": "2026-06-07T21:10:43Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
   },
   {
     "name": "pydive",
@@ -13,23 +17,11 @@
     "language": "Makefile",
     "stars": 1,
     "url": "https://github.com/dforero0896/pydive",
-    "updated": "2026-09-25T13:07:22Z"
-  },
-  {
-    "name": "geofptax",
-    "description": "JAX implementation of GEO-FPT model for the bispectrum of galaxy surveys.",
-    "language": "C",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/geofptax",
-    "updated": "2026-08-31T16:29:37Z"
-  },
-  {
-    "name": "pyfcfc",
-    "description": "Python wrapper for the FCFC code for fast two-point correlation function computation.",
-    "language": "C",
-    "stars": 5,
-    "url": "https://github.com/dforero0896/pyfcfc",
-    "updated": "2026-06-07T21:10:43Z"
+    "updated": "2026-09-25T13:07:22Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
   },
   {
     "name": "jax-powspec",
@@ -37,287 +29,11 @@
     "language": "Python",
     "stars": 1,
     "url": "https://github.com/dforero0896/jax-powspec",
-    "updated": "2025-09-15T05:32:41Z"
-  },
-  {
-    "name": "dforero0896",
-    "description": "",
-    "language": "Other",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/dforero0896",
-    "updated": "2024-11-12T09:04:54Z"
-  },
-  {
-    "name": "pyCosmoMIA",
-    "description": "C++ w/ python bindings version of CosmoMIA.jl",
-    "language": "Python",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/pyCosmoMIA",
-    "updated": "2024-07-12T16:01:37Z"
-  },
-  {
-    "name": "CosmoMIA.jl",
-    "description": "Cosmological Multiscale Infall Algorithm",
-    "language": "Julia",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/CosmoMIA.jl",
-    "updated": "2024-05-10T12:55:36Z"
-  },
-  {
-    "name": "Powspec.jl",
-    "description": "Julia bindings to Cheng Zhao's powspec C code.",
-    "language": "Julia",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/Powspec.jl",
-    "updated": "2022-10-16T21:27:43Z"
-  },
-  {
-    "name": "libpowspec",
-    "description": "Library based on Cheng Zhao's powspec code",
-    "language": "C",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/libpowspec",
-    "updated": "2022-10-14T14:45:45Z"
-  },
-  {
-    "name": "BAOrec.jl",
-    "description": "BAO Reconstruction code in Julia",
-    "language": "Julia",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/BAOrec.jl",
-    "updated": "2022-10-14T13:30:33Z"
-  },
-  {
-    "name": "CosmoWeb.jl",
-    "description": "Small package to compute cosmic web properties and classification.",
-    "language": "Julia",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/CosmoWeb.jl",
-    "updated": "2022-09-26T17:10:46Z"
-  },
-  {
-    "name": "CosmoCorr.jl",
-    "description": "Basic computation of correlation functions and power spectra for cosmology",
-    "language": "Julia",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/CosmoCorr.jl",
-    "updated": "2022-09-26T17:09:45Z"
-  },
-  {
-    "name": "DIVEnamics.jl",
-    "description": "Julia implementation of the DIVE algorithm for finding voids in a point set with applications in observational cosmology.",
-    "language": "Julia",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/DIVEnamics.jl",
-    "updated": "2022-09-26T17:07:02Z"
-  },
-  {
-    "name": "Boltzmann.jl",
-    "description": "A Boltzmann code in julia",
-    "language": "Julia",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/Boltzmann.jl",
-    "updated": "2022-09-26T17:00:15Z"
-  },
-  {
-    "name": "fwd_recon",
-    "description": "Forward-modelling reconstruction using differentiable models.",
-    "language": "Python",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/fwd_recon",
-    "updated": "2022-05-27T19:45:12Z"
-  },
-  {
-    "name": "pkfit",
-    "description": "Power spectrum fitter using Ultranest",
-    "language": "Python",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/pkfit",
-    "updated": "2021-12-26T15:21:26Z"
-  },
-  {
-    "name": "DeepLearningProjects",
-    "description": "Projects for EPFL's DL course spring 2021",
-    "language": "Python",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/DeepLearningProjects",
-    "updated": "2021-07-29T12:19:24Z"
-  },
-  {
-    "name": "DL_exos",
-    "description": "",
-    "language": "Jupyter Notebook",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/DL_exos",
-    "updated": "2021-03-02T13:15:11Z"
-  },
-  {
-    "name": "baosystematics",
-    "description": "Code for analysing the effects of different systematics in the BAO curve.",
-    "language": "Shell",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/baosystematics",
-    "updated": "2021-02-21T17:45:05Z"
-  },
-  {
-    "name": "2pcf_bao_fitter",
-    "description": "2pcf BAO fitter ",
-    "language": "Python",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/2pcf_bao_fitter",
-    "updated": "2021-02-14T15:00:13Z"
-  },
-  {
-    "name": "ML_course",
-    "description": "My solutions to EPFL's ML exercises.",
-    "language": "Jupyter Notebook",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/ML_course",
-    "updated": "2020-07-19T11:40:56Z"
-  },
-  {
-    "name": "conda_envs",
-    "description": ".yml files for the working conda environments.",
-    "language": "Other",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/conda_envs",
-    "updated": "2020-07-19T11:09:50Z"
-  },
-  {
-    "name": "catedra_computacionales",
-    "description": "Examen de admisión a cátedra en cursos computacionales Uniandes 202020",
-    "language": "Jupyter Notebook",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/catedra_computacionales",
-    "updated": "2020-07-16T00:51:45Z"
-  },
-  {
-    "name": "binder-test",
-    "description": "Test Binder",
-    "language": "Other",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/binder-test",
-    "updated": "2020-07-11T14:08:17Z"
-  },
-  {
-    "name": "gravitational_lens_ml",
-    "description": "Gravitational lens finding challenge v2.",
-    "language": "Jupyter Notebook",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/gravitational_lens_ml",
-    "updated": "2020-02-19T19:44:55Z"
-  },
-  {
-    "name": "CSPS_Tasks",
-    "description": "Homework for Computational Simulation of Physical Systems at EPFL 2019-1.",
-    "language": "Jupyter Notebook",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/CSPS_Tasks",
-    "updated": "2019-12-17T10:29:57Z"
-  },
-  {
-    "name": "ml-project1",
-    "description": "First project of the ML course at EPFL Autumn 2019",
-    "language": "Jupyter Notebook",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/ml-project1",
-    "updated": "2019-10-28T20:34:43Z"
-  },
-  {
-    "name": "TP4_Muons",
-    "description": "Files for Cosmic Muon Experiment for TP4",
-    "language": "Jupyter Notebook",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/TP4_Muons",
-    "updated": "2019-01-09T21:17:14Z"
-  },
-  {
-    "name": "GeoScPlot",
-    "description": "A library to provide high-quality templates for important plots in Earth Sciences",
-    "language": "Jupyter Notebook",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/GeoScPlot",
-    "updated": "2018-08-15T22:55:33Z"
-  },
-  {
-    "name": "NCFS",
-    "description": "Un programa para manejar historias médicas a partir de bases de datos.",
-    "language": "Jupyter Notebook",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/NCFS",
-    "updated": "2018-08-05T19:23:02Z"
-  },
-  {
-    "name": "Physics_Monograph",
-    "description": "Monograph for the geoscientist and physicist degree at Universidad de Los Andes",
-    "language": "C++",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/Physics_Monograph",
-    "updated": "2018-07-24T19:35:48Z"
-  },
-  {
-    "name": "Mecanica_Cuantica1_201810",
-    "description": "Soluciones a las tareas de MC1 del semestre 201810 en Uniandes.",
-    "language": "Jupyter Notebook",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/Mecanica_Cuantica1_201810",
-    "updated": "2018-05-29T05:36:31Z"
-  },
-  {
-    "name": "SomeDEs",
-    "description": "Half a homework of Computational Methods course at Uniandes 201810, just for fun.",
-    "language": "C++",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/SomeDEs",
-    "updated": "2018-05-11T19:43:21Z"
-  },
-  {
-    "name": "Rel_Gral_Cosmo",
-    "description": "Relatividad General y Cosmologia en Uniandes.",
-    "language": "Jupyter Notebook",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/Rel_Gral_Cosmo",
-    "updated": "2018-05-04T22:09:27Z"
-  },
-  {
-    "name": "UANdINO",
-    "description": "Uniandes (Anti)neutrINo Oscillation calculator: Calculates survival/transition probabilities for (anti)neutrinos given a density function.",
-    "language": "C++",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/UANdINO",
-    "updated": "2018-05-04T21:12:42Z"
-  },
-  {
-    "name": "Laboratorio_Intermedio",
-    "description": "Archivos relacionados al Laboratorio Intermedio del programa de Física en Uniandes.",
-    "language": "Jupyter Notebook",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/Laboratorio_Intermedio",
-    "updated": "2017-08-18T00:12:53Z"
-  },
-  {
-    "name": "N_bodies",
-    "description": "N-body broblem simulation with random masses and initial conditions.",
-    "language": "Jupyter Notebook",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/N_bodies",
-    "updated": "2017-07-14T02:28:22Z"
-  },
-  {
-    "name": "Laboratorio_Sensores_Remotos",
-    "description": "Trabajo del Laboratorio de Sensores Remotos Uniandes 201710",
-    "language": "Python",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/Laboratorio_Sensores_Remotos",
-    "updated": "2017-05-12T12:33:35Z"
-  },
-  {
-    "name": "DanielForero_MCA",
-    "description": "Métodos Computacionales Avanzados - Uniandes",
-    "language": "Jupyter Notebook",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/DanielForero_MCA",
-    "updated": "2017-03-06T23:18:13Z"
+    "updated": "2025-09-15T05:32:41Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
   },
   {
     "name": "MC",
@@ -325,7 +41,443 @@
     "language": "C",
     "stars": 1,
     "url": "https://github.com/dforero0896/MC",
-    "updated": "2017-02-16T23:47:28Z"
+    "updated": "2017-02-16T23:47:28Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "geofptax",
+    "description": "JAX implementation of GEO-FPT model for the bispectrum of galaxy surveys.",
+    "language": "C",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/geofptax",
+    "updated": "2026-08-31T16:29:37Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "dforero0896",
+    "description": "",
+    "language": "Other",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/dforero0896",
+    "updated": "2024-11-12T09:04:54Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "pyCosmoMIA",
+    "description": "C++ w/ python bindings version of CosmoMIA.jl",
+    "language": "Python",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/pyCosmoMIA",
+    "updated": "2024-07-12T16:01:37Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "CosmoMIA.jl",
+    "description": "Cosmological Multiscale Infall Algorithm",
+    "language": "Julia",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/CosmoMIA.jl",
+    "updated": "2024-05-10T12:55:36Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "Powspec.jl",
+    "description": "Julia bindings to Cheng Zhao's powspec C code.",
+    "language": "Julia",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/Powspec.jl",
+    "updated": "2022-10-16T21:27:43Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "libpowspec",
+    "description": "Library based on Cheng Zhao's powspec code",
+    "language": "C",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/libpowspec",
+    "updated": "2022-10-14T14:45:45Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "BAOrec.jl",
+    "description": "BAO Reconstruction code in Julia",
+    "language": "Julia",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/BAOrec.jl",
+    "updated": "2022-10-14T13:30:33Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "CosmoWeb.jl",
+    "description": "Small package to compute cosmic web properties and classification.",
+    "language": "Julia",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/CosmoWeb.jl",
+    "updated": "2022-09-26T17:10:46Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "CosmoCorr.jl",
+    "description": "Basic computation of correlation functions and power spectra for cosmology",
+    "language": "Julia",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/CosmoCorr.jl",
+    "updated": "2022-09-26T17:09:45Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "DIVEnamics.jl",
+    "description": "Julia implementation of the DIVE algorithm for finding voids in a point set with applications in observational cosmology.",
+    "language": "Julia",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/DIVEnamics.jl",
+    "updated": "2022-09-26T17:07:02Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "Boltzmann.jl",
+    "description": "A Boltzmann code in julia",
+    "language": "Julia",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/Boltzmann.jl",
+    "updated": "2022-09-26T17:00:15Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "fwd_recon",
+    "description": "Forward-modelling reconstruction using differentiable models.",
+    "language": "Python",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/fwd_recon",
+    "updated": "2022-05-27T19:45:12Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "pkfit",
+    "description": "Power spectrum fitter using Ultranest",
+    "language": "Python",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/pkfit",
+    "updated": "2021-12-26T15:21:26Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "DeepLearningProjects",
+    "description": "Projects for EPFL's DL course spring 2021",
+    "language": "Python",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/DeepLearningProjects",
+    "updated": "2021-07-29T12:19:24Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "DL_exos",
+    "description": "",
+    "language": "Jupyter Notebook",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/DL_exos",
+    "updated": "2021-03-02T13:15:11Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "baosystematics",
+    "description": "Code for analysing the effects of different systematics in the BAO curve.",
+    "language": "Shell",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/baosystematics",
+    "updated": "2021-02-21T17:45:05Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "2pcf_bao_fitter",
+    "description": "2pcf BAO fitter ",
+    "language": "Python",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/2pcf_bao_fitter",
+    "updated": "2021-02-14T15:00:13Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "ML_course",
+    "description": "My solutions to EPFL's ML exercises.",
+    "language": "Jupyter Notebook",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/ML_course",
+    "updated": "2020-07-19T11:40:56Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "conda_envs",
+    "description": ".yml files for the working conda environments.",
+    "language": "Other",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/conda_envs",
+    "updated": "2020-07-19T11:09:50Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "catedra_computacionales",
+    "description": "Examen de admisión a cátedra en cursos computacionales Uniandes 202020",
+    "language": "Jupyter Notebook",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/catedra_computacionales",
+    "updated": "2020-07-16T00:51:45Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "binder-test",
+    "description": "Test Binder",
+    "language": "Other",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/binder-test",
+    "updated": "2020-07-11T14:08:17Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "gravitational_lens_ml",
+    "description": "Gravitational lens finding challenge v2.",
+    "language": "Jupyter Notebook",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/gravitational_lens_ml",
+    "updated": "2020-02-19T19:44:55Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "CSPS_Tasks",
+    "description": "Homework for Computational Simulation of Physical Systems at EPFL 2019-1.",
+    "language": "Jupyter Notebook",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/CSPS_Tasks",
+    "updated": "2019-12-17T10:29:57Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "ml-project1",
+    "description": "First project of the ML course at EPFL Autumn 2019",
+    "language": "Jupyter Notebook",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/ml-project1",
+    "updated": "2019-10-28T20:34:43Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "TP4_Muons",
+    "description": "Files for Cosmic Muon Experiment for TP4",
+    "language": "Jupyter Notebook",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/TP4_Muons",
+    "updated": "2019-01-09T21:17:14Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "GeoScPlot",
+    "description": "A library to provide high-quality templates for important plots in Earth Sciences",
+    "language": "Jupyter Notebook",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/GeoScPlot",
+    "updated": "2018-08-15T22:55:33Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "NCFS",
+    "description": "Un programa para manejar historias médicas a partir de bases de datos.",
+    "language": "Jupyter Notebook",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/NCFS",
+    "updated": "2018-08-05T19:23:02Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "Physics_Monograph",
+    "description": "Monograph for the geoscientist and physicist degree at Universidad de Los Andes",
+    "language": "C++",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/Physics_Monograph",
+    "updated": "2018-07-24T19:35:48Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "Mecanica_Cuantica1_201810",
+    "description": "Soluciones a las tareas de MC1 del semestre 201810 en Uniandes.",
+    "language": "Jupyter Notebook",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/Mecanica_Cuantica1_201810",
+    "updated": "2018-05-29T05:36:31Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "SomeDEs",
+    "description": "Half a homework of Computational Methods course at Uniandes 201810, just for fun.",
+    "language": "C++",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/SomeDEs",
+    "updated": "2018-05-11T19:43:21Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "Rel_Gral_Cosmo",
+    "description": "Relatividad General y Cosmologia en Uniandes.",
+    "language": "Jupyter Notebook",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/Rel_Gral_Cosmo",
+    "updated": "2018-05-04T22:09:27Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "UANdINO",
+    "description": "Uniandes (Anti)neutrINo Oscillation calculator: Calculates survival/transition probabilities for (anti)neutrinos given a density function.",
+    "language": "C++",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/UANdINO",
+    "updated": "2018-05-04T21:12:42Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "Laboratorio_Intermedio",
+    "description": "Archivos relacionados al Laboratorio Intermedio del programa de Física en Uniandes.",
+    "language": "Jupyter Notebook",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/Laboratorio_Intermedio",
+    "updated": "2017-08-18T00:12:53Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "N_bodies",
+    "description": "N-body broblem simulation with random masses and initial conditions.",
+    "language": "Jupyter Notebook",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/N_bodies",
+    "updated": "2017-07-14T02:28:22Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "Laboratorio_Sensores_Remotos",
+    "description": "Trabajo del Laboratorio de Sensores Remotos Uniandes 201710",
+    "language": "Python",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/Laboratorio_Sensores_Remotos",
+    "updated": "2017-05-12T12:33:35Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "DanielForero_MCA",
+    "description": "Métodos Computacionales Avanzados - Uniandes",
+    "language": "Jupyter Notebook",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/DanielForero_MCA",
+    "updated": "2017-03-06T23:18:13Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
   },
   {
     "name": "Geodynamics",
@@ -333,7 +485,11 @@
     "language": "Jupyter Notebook",
     "stars": 0,
     "url": "https://github.com/dforero0896/Geodynamics",
-    "updated": "2016-10-12T17:54:25Z"
+    "updated": "2016-10-12T17:54:25Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
   },
   {
     "name": "Laboratorio_Sismica",
@@ -341,6 +497,330 @@
     "language": "Jupyter Notebook",
     "stars": 0,
     "url": "https://github.com/dforero0896/Laboratorio_Sismica",
-    "updated": "2016-03-06T05:55:26Z"
+    "updated": "2016-03-06T05:55:26Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
+    "name": "pypowspec",
+    "description": "C code for auto and cross power spectra evaluation. Plus a simple python interface.",
+    "language": "C",
+    "stars": 1,
+    "url": "https://github.com/dforero0896/pypowspec",
+    "updated": "2025-10-21T13:37:02Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": true,
+    "parent": null
+  },
+  {
+    "name": "jax_cosmo",
+    "description": "A differentiable cosmology library in JAX",
+    "language": "Python",
+    "stars": 1,
+    "url": "https://github.com/dforero0896/jax_cosmo",
+    "updated": "2024-07-18T12:23:40Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": true,
+    "parent": null
+  },
+  {
+    "name": "JaxPM",
+    "description": "JAX-powered Cosmological Particle-Mesh N-body Solver",
+    "language": "Other",
+    "stars": 1,
+    "url": "https://github.com/dforero0896/JaxPM",
+    "updated": "2024-07-18T12:23:38Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": true,
+    "parent": null
+  },
+  {
+    "name": "Brass",
+    "description": "Bao and Rsd Algorithm for Spectroscopic Surveys",
+    "language": "Other",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/Brass",
+    "updated": "2026-10-02T06:51:53Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": true,
+    "parent": null
+  },
+  {
+    "name": "FolpsD",
+    "description": "FolpsD with GeoFPT",
+    "language": "Jupyter Notebook",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/FolpsD",
+    "updated": "2026-09-13T20:06:52Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": true,
+    "parent": null
+  },
+  {
+    "name": "jaxace",
+    "description": "",
+    "language": "Other",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/jaxace",
+    "updated": "2026-07-26T20:46:57Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": true,
+    "parent": null
+  },
+  {
+    "name": "desilike",
+    "description": "",
+    "language": "Jupyter Notebook",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/desilike",
+    "updated": "2026-06-29T13:56:13Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": true,
+    "parent": null
+  },
+  {
+    "name": "Cosmology.jl",
+    "description": "Cosmology library for Julia",
+    "language": "Julia",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/Cosmology.jl",
+    "updated": "2026-06-28T04:18:12Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": true,
+    "parent": null
+  },
+  {
+    "name": "montecosmo",
+    "description": "Differentiable pipeline for field-level cosmological inference from galaxy surveys.",
+    "language": "Other",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/montecosmo",
+    "updated": "2026-01-08T13:25:19Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": true,
+    "parent": null
+  },
+  {
+    "name": "benchmark-field-level",
+    "description": "Benchmarking field-level cosmological inference from galaxy surveys.",
+    "language": "Other",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/benchmark-field-level",
+    "updated": "2026-01-08T11:05:00Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": true,
+    "parent": null
+  },
+  {
+    "name": "cosmoprimo",
+    "description": "package for primordial cosmology",
+    "language": "Other",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/cosmoprimo",
+    "updated": "2025-09-05T09:15:02Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": true,
+    "parent": null
+  },
+  {
+    "name": "desimodel",
+    "description": "Code that reads and processes the desimodel data files.",
+    "language": "Other",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/desimodel",
+    "updated": "2025-07-17T07:20:51Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": true,
+    "parent": null
+  },
+  {
+    "name": "muscle-ups3",
+    "description": "MUltiscale Spherical Collapse Lagrangian Evolution Using Press-Schechter",
+    "language": "Other",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/muscle-ups3",
+    "updated": "2025-03-24T06:51:27Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": true,
+    "parent": null
+  },
+  {
+    "name": "acm",
+    "description": "Fork implementing DTvoid statistics",
+    "language": "Jupyter Notebook",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/acm",
+    "updated": "2024-11-20T09:26:05Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": true,
+    "parent": null
+  },
+  {
+    "name": "numba",
+    "description": "NumPy aware dynamic Python compiler using LLVM",
+    "language": "Other",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/numba",
+    "updated": "2023-10-05T12:02:30Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": true,
+    "parent": null
+  },
+  {
+    "name": "FCFC",
+    "description": "Fast Correlation Function Calculator",
+    "language": "C",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/FCFC",
+    "updated": "2023-06-04T16:26:21Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": true,
+    "parent": null
+  },
+  {
+    "name": "Barry",
+    "description": "BAO Model Fitting Made Easy",
+    "language": "Other",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/Barry",
+    "updated": "2023-05-20T19:07:59Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": true,
+    "parent": null
+  },
+  {
+    "name": "Recfast.jl",
+    "description": "Julia implementation of Recfast++",
+    "language": "Julia",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/Recfast.jl",
+    "updated": "2023-01-31T20:25:23Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": true,
+    "parent": null
+  },
+  {
+    "name": "pycorr",
+    "description": "2-pt correlation function estimation",
+    "language": "Other",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/pycorr",
+    "updated": "2022-10-27T16:32:19Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": true,
+    "parent": null
+  },
+  {
+    "name": "pyrecon",
+    "description": "package for BAO reconstruction",
+    "language": "Other",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/pyrecon",
+    "updated": "2022-06-22T23:00:21Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": true,
+    "parent": null
+  },
+  {
+    "name": "Pylians3",
+    "description": "Libraries to analyze numerical simulations (python3)",
+    "language": "Other",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/Pylians3",
+    "updated": "2021-10-23T12:26:31Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": true,
+    "parent": null
+  },
+  {
+    "name": "DESI_Recon",
+    "description": "",
+    "language": "Other",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/DESI_Recon",
+    "updated": "2020-11-12T18:49:12Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": true,
+    "parent": null
+  },
+  {
+    "name": "Revolver",
+    "description": "Real-space void locations from survey reconstruction",
+    "language": "Other",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/Revolver",
+    "updated": "2020-08-26T14:06:17Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": true,
+    "parent": null
+  },
+  {
+    "name": "acm",
+    "description": "",
+    "language": "Other",
+    "stars": 0,
+    "url": "https://github.com/epaillas/acm",
+    "owner": "epaillas",
+    "isOwn": false,
+    "isFork": false,
+    "commits": 5
+  },
+  {
+    "name": "desimodel",
+    "description": "Code that reads and processes the desimodel data files.",
+    "language": "Other",
+    "stars": 0,
+    "url": "https://github.com/desihub/desimodel",
+    "owner": "desihub",
+    "isOwn": false,
+    "isFork": false,
+    "commits": 1
+  },
+  {
+    "name": "numba",
+    "description": "NumPy aware dynamic Python compiler using LLVM",
+    "language": "Other",
+    "stars": 0,
+    "url": "https://github.com/numba/numba",
+    "owner": "numba",
+    "isOwn": false,
+    "isFork": false,
+    "commits": 1
+  },
+  {
+    "name": "desi-y1-kp45",
+    "description": "Repository for KP4 and KP5",
+    "language": "Other",
+    "stars": 0,
+    "url": "https://github.com/cosmodesi/desi-y1-kp45",
+    "owner": "cosmodesi",
+    "isOwn": false,
+    "isFork": false,
+    "commits": 1
   }
 ]
