@@ -504,6 +504,18 @@
     "parent": null
   },
   {
+    "name": "desilike",
+    "description": "",
+    "language": "Jupyter Notebook",
+    "stars": 1,
+    "url": "https://github.com/dforero0896/desilike",
+    "updated": "2026-10-05T13:21:26Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": true,
+    "parent": null
+  },
+  {
     "name": "pypowspec",
     "description": "C code for auto and cross power spectra evaluation. Plus a simple python interface.",
     "language": "C",
@@ -570,18 +582,6 @@
     "stars": 0,
     "url": "https://github.com/dforero0896/jaxace",
     "updated": "2026-07-26T20:46:57Z",
-    "owner": "dforero0896",
-    "isOwn": true,
-    "isFork": true,
-    "parent": null
-  },
-  {
-    "name": "desilike",
-    "description": "",
-    "language": "Jupyter Notebook",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/desilike",
-    "updated": "2026-06-29T13:56:13Z",
     "owner": "dforero0896",
     "isOwn": true,
     "isFork": true,
