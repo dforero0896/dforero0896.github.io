@@ -552,6 +552,30 @@
     "parent": null
   },
   {
+    "name": "cosmoprimo",
+    "description": "package for primordial cosmology",
+    "language": "Python",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/cosmoprimo",
+    "updated": "2026-10-11T12:43:09Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": true,
+    "parent": null
+  },
+  {
+    "name": "DISCO-EB",
+    "description": "JAX-based linear Einstein-Boltzmann solver for cosmology",
+    "language": "Jupyter Notebook",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/DISCO-EB",
+    "updated": "2026-10-11T12:42:08Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": true,
+    "parent": null
+  },
+  {
     "name": "Brass",
     "description": "Bao and Rsd Algorithm for Spectroscopic Surveys",
     "language": "Other",
@@ -618,18 +642,6 @@
     "stars": 0,
     "url": "https://github.com/dforero0896/benchmark-field-level",
     "updated": "2026-01-08T11:05:00Z",
-    "owner": "dforero0896",
-    "isOwn": true,
-    "isFork": true,
-    "parent": null
-  },
-  {
-    "name": "cosmoprimo",
-    "description": "package for primordial cosmology",
-    "language": "Other",
-    "stars": 0,
-    "url": "https://github.com/dforero0896/cosmoprimo",
-    "updated": "2025-09-05T09:15:02Z",
     "owner": "dforero0896",
     "isOwn": true,
     "isFork": true,
