@@ -504,6 +504,18 @@
     "parent": null
   },
   {
+    "name": "jax_cosmo",
+    "description": "A differentiable cosmology library in JAX",
+    "language": "Python",
+    "stars": 1,
+    "url": "https://github.com/dforero0896/jax_cosmo",
+    "updated": "2026-10-14T08:00:25Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": true,
+    "parent": null
+  },
+  {
     "name": "pypowspec",
     "description": "C code for auto and cross power spectra evaluation. Plus a simple python interface.",
     "language": "C",
@@ -522,18 +534,6 @@
     "stars": 1,
     "url": "https://github.com/dforero0896/desilike",
     "updated": "2026-10-05T13:21:26Z",
-    "owner": "dforero0896",
-    "isOwn": true,
-    "isFork": true,
-    "parent": null
-  },
-  {
-    "name": "jax_cosmo",
-    "description": "A differentiable cosmology library in JAX",
-    "language": "Python",
-    "stars": 1,
-    "url": "https://github.com/dforero0896/jax_cosmo",
-    "updated": "2024-07-18T12:23:40Z",
     "owner": "dforero0896",
     "isOwn": true,
     "isFork": true,
