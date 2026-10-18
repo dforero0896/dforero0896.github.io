@@ -3,15 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Daniel Forero-Sánchez — postdoctoral researcher in cosmology at the Institute of Cosmos Sciences, University of Barcelona. Large-scale structure, spectroscopic surveys, simulations and machine learning.">
+    <meta name="theme-color" content="#06070d">
     <title>Daniel Forero-Sánchez | Cosmologist</title>
+    <!-- Latin Modern Sans alternative (LaTeX look). To use it, uncomment the next
+         line and put "Latin Modern Sans" first in --font-display in style.css. -->
+    <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lalten/lmweb@master/style/latinmodern-sans.css"> -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Animated cosmic web: Zeldovich particles, density/depth colour map -->
+    <canvas id="cosmic-web" aria-hidden="true"></canvas>
     <!-- Navigation -->
     <nav>
         <div class="container">
-            <a href="#" style="font-weight:bold; font-size:1.2rem;">Daniel Forero-Sánchez</a>
+            <a href="#" class="brand">Daniel Forero-Sánchez</a>
             <div class="nav-links">
                 <a href="#about">About</a>
                 <a href="#research">Research</a>
@@ -25,7 +32,7 @@
     <!-- Hero -->
     <header class="hero">
         <div class="container">
-            <img id="hero-avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%2334495e'/%3E%3Ctext x='50' y='55' text-anchor='middle' fill='white' font-size='18' font-family='Arial' dy='.3em'%3EPhoto%3C/text%3E%3C/svg%3E" alt="Daniel Forero-Sánchez" class="profile-pic">
+            <img id="hero-avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23131316'/%3E%3Ctext x='50' y='55' text-anchor='middle' fill='%238a8a8f' font-size='18' font-family='Arial' dy='.3em'%3EPhoto%3C/text%3E%3C/svg%3E" alt="Daniel Forero-Sánchez" class="profile-pic">
             <h1>Daniel Forero-Sánchez</h1>
             <h2>Postdoctoral Researcher in Cosmology</h2>
             <p>Institut de Ciències del Cosmos, Universitat de Barcelona</p>
@@ -51,7 +58,7 @@
                 <p>
                     I earned my PhD in Physics from EPFL (Switzerland), where I worked on the sensitivity of void baryon acoustic oscillations to selection effects and created simulation-based models for the cosmic web. Before that, I completed a double BSc in Physics and Geoscience in Colombia.
                 </p>
-                <h3 style="margin-top:1.5rem;">Research Interests</h3>
+                <h3>Research Interests</h3>
                 <ul class="interest-list">
                     <li>Cosmology</li><li>Large-Scale Structure</li><li>Spectroscopic Surveys</li><li>Machine Learning</li>
                     <li>Computational Cosmology</li><li>Simulations</li><li>Mock Generation</li><li>Data Analysis</li>
@@ -134,10 +141,28 @@
     <section id="code">
         <div class="container">
             <h2>Code &amp; Tools</h2>
-            <p style="margin-bottom: 1.5rem;">
-                A selection of my public repositories. See everything on
+            <p style="margin-bottom: 1.75rem;">
+                An interactive explorer for the linear power spectrum, plus a selection of my
+                public repositories. See everything on
                 <a href="https://github.com/dforero0896" target="_blank">GitHub <i class="fab fa-github"></i></a>.
             </p>
+            <!-- Featured tool: static Vite build of github.com/dforero0896/shapefit-visualizer -->
+            <a class="tool-feature" href="shapefit/" target="_blank" rel="noopener">
+                <span class="tool-feature-body">
+                    <span class="tool-feature-label">Interactive tool</span>
+                    <span class="tool-feature-title">ShapeFit Power Spectrum Explorer</span>
+                    <span class="tool-feature-desc">
+                        Move the cosmological and template parameters and watch the linear power
+                        spectrum respond &mdash; P(k), &Delta;&sup2;(k) and the residual against the
+                        DESI DR1 measurements, with an optional nonlinear correction.
+                    </span>
+                    <span class="tool-feature-cta">Open the explorer <i class="fas fa-arrow-right"></i></span>
+                </span>
+                <span class="tool-feature-media">
+                    <img src="assets/shapefit-preview.png" width="900" height="427" loading="lazy"
+                         alt="Screenshot of the explorer: the linear power spectrum Δ²(k) versus wavenumber k, with the ShapeFit turnover marked and DESI DR1 data enabled.">
+                </span>
+            </a>
             <div id="repos-list">
                 <p>Loading repositories…</p>
             </div>
@@ -173,18 +198,18 @@
             <h2>Teaching & Advising</h2>
             <div class="grid-2">
                 <div>
-                    <h3 style="color: var(--accent);"><i class="fas fa-chalkboard-teacher"></i> Student Supervision</h3>
+                    <h3><i class="fas fa-chalkboard-teacher"></i> Student Supervision</h3>
                     <ul style="margin-left: 1.5rem;">
                         <li><strong>Master Thesis Co-supervision</strong> – "Denoising cosmological power spectra using Deep Learning" (Spring 2021)</li>
                         <li><strong>Semester Project Supervision</strong> – "Direct cosmological parameter estimation from cosmic voids using neural networks" (Autumn 2022)</li>
                         <li><strong>Student Research Project Co-supervision</strong> – "Effect of redshift measurement uncertainty on neutrino mass from LSS" (Autumn 2023)</li>
                     </ul>
-                    <h3 style="color: var(--accent); margin-top:1.5rem;"><i class="fas fa-university"></i> Teaching Assistantships</h3>
+                    <h3 style="margin-top:1.5rem;"><i class="fas fa-university"></i> Teaching Assistantships</h3>
                     <p><strong>Doctoral Assistant, EPFL</strong> (2021–2023): Led exercise sessions for <em>General Physics for Life Science</em> and <em>Astrophysics IV</em>; final exam grading.</p>
                     <p><strong>Teaching Assistant, Uniandes</strong> (2015–2018): Electromagnetism II, Quantum Mechanics I, Thermodynamics, Seismics & Seismology.</p>
                 </div>
                 <div>
-                    <h3 style="color: var(--accent);"><i class="fas fa-users"></i> Outreach</h3>
+                    <h3><i class="fas fa-users"></i> Outreach</h3>
                     <p><strong>Guided visits to the Geneva Observatory</strong> (2021–2024): Led public tours, gave educational presentations in astrophysics, facilitated Q&A sessions and virtual reality demonstrations.</p>
                 </div>
             </div>
@@ -215,11 +240,11 @@
     </section>
 
     <!-- CV Download -->
-    <section id="cv" style="text-align: center;">
+    <section id="cv">
         <div class="container">
             <h2>Curriculum Vitae</h2>
-            <p>Download my full CV as a PDF.</p>
-            <a href="CV No pub.pdf" class="btn" download><i class="fas fa-download"></i> Download CV (PDF)</a>
+            <p>My CV as a PDF — two pages, no publication list.</p>
+            <a href="assets/cv_2page.pdf" class="btn" download><i class="fas fa-download"></i> Download CV (PDF)</a>
         </div>
     </section>
 
@@ -229,6 +254,7 @@
             <p>© 2025 Daniel Forero-Sánchez · <a href="https://orcid.org/0000-0001-5957-332X" target="_blank">ORCID</a></p>
         </div>
     </footer>
+    <script src="js/cosmic-web.js" defer></script>
     <script src="js/main.js" defer></script>
 </body>
 </html>

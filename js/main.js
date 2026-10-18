@@ -2,6 +2,24 @@
 
 // ---------- PUBLICATIONS LOADER (with “Show more” button) ----------
 // ---------- PUBLICATIONS LOADER (with author expansion) ----------
+
+// Shared JSON cache: the publications list and the stats widget both need
+// publications.json, so download it once per page load.
+const sharedJSON = (() => {
+    const requests = new Map();
+    return (url) => {
+        if (!requests.has(url)) {
+            requests.set(url, fetch(url).then((res) => {
+                if (!res.ok) throw new Error('File not found');
+                return res.json();
+            }));
+            // Drop failed requests so a later caller can retry.
+            requests.get(url).catch(() => requests.delete(url));
+        }
+        return requests.get(url);
+    };
+})();
+
 (async function loadPublications() {
     const container = document.getElementById('publications-list');
     const nameVariations = [
@@ -22,9 +40,7 @@
     }
 
     try {
-        const res = await fetch('publications.json');
-        if (!res.ok) throw new Error('File not found');
-        const allWorks = await res.json();
+        const allWorks = await sharedJSON('publications.json');
 
         if (allWorks.length === 0) {
             container.innerHTML = '<p>No publications found.</p>';
@@ -170,11 +186,8 @@
 
     let paperCount = '—';
     try {
-        const pubRes = await fetch('publications.json');
-        if (pubRes.ok) {
-            const pubs = await pubRes.json();
-            paperCount = Array.isArray(pubs) ? pubs.length : '—';
-        }
+        const pubs = await sharedJSON('publications.json');
+        paperCount = Array.isArray(pubs) ? pubs.length : '—';
     } catch (e) {}
 
     // 2. Build widget HTML with data-value attributes for animation
@@ -228,6 +241,15 @@
     if (!container) return;
     const INITIAL_COUNT = 6;   // change as you wish
 
+    // Language dot colours (GitHub-style hues); unknown languages fall back to CSS.
+    const LANG_COLOURS = {
+        JavaScript: '#f1e05a', TypeScript: '#3178c6', Python: '#3572a5',
+        HTML: '#e34c26', CSS: '#663399', Julia: '#a270ba',
+        'Jupyter Notebook': '#da5b0b', 'C++': '#f34b7d', C: '#555555',
+        TeX: '#3d6117', Shell: '#89e051', Rust: '#dea584',
+        Fortran: '#4d41b1', MATLAB: '#e16737', R: '#198ce7', Go: '#00add8'
+    };
+
     try {
         const res = await fetch('repos.json');
         if (!res.ok) throw new Error('File not found');
@@ -259,6 +281,9 @@
                     badge = `<span class="repo-badge repo-badge-contrib">Contributor · ${repo.commits} commits</span>`;
                 }
 
+                const langColour = LANG_COLOURS[repo.language];
+                const dotStyle = langColour ? ` style="color:${langColour}"` : '';
+
                 html += `
                     <div class="repo-card">
                         <div class="repo-name">
@@ -270,7 +295,7 @@
                         ${forkNote}
                         <div class="repo-description">${repo.description || 'No description yet.'}</div>
                         <div class="repo-meta">
-                            <span><i class="fas fa-circle" style="color: #00bcd4; font-size:0.6rem;"></i> ${repo.language}</span>
+                            <span><i class="fas fa-circle repo-lang-dot"${dotStyle}></i> ${repo.language}</span>
                             <span><i class="fas fa-star"></i> ${repo.stars}</span>
                             <span><i class="far fa-clock"></i> Updated ${new Date(repo.updated).toLocaleDateString()}</span>
                         </div>

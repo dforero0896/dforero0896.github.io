@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Interactive explorer for the linear power spectrum: the ShapeFit template, cosmological parameters and DESI DR1 measurements." />
+    <meta name="theme-color" content="#06070d" />
+    <title>Linear Power Spectrum Explorer - ShapeFit & Cosmological Parameters</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      /* 内联样式确保主题色立即生效，避免闪烁 */
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+      }
+      html.light,
+      html.light body {
+        background-color: #ffffff !important;
+        color: #000000;
+      }
+      html.dark,
+      html.dark body {
+        background-color: #06070d !important;
+        color: #ece9e3;
+      }
+      /* Back-link to the home site (added when vendoring this build). */
+      .sf-back {
+        position: fixed;
+        left: 1rem;
+        bottom: 1rem;
+        z-index: 9999;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.4rem 0.75rem;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 999px;
+        background: rgba(6, 7, 13, 0.72);
+        -webkit-backdrop-filter: blur(8px);
+        backdrop-filter: blur(8px);
+        color: #8c8c92;
+        font: 400 12px/1 "Helvetica Neue", Helvetica, Arial, sans-serif;
+        letter-spacing: 0.02em;
+        text-decoration: none;
+        transition: color 0.2s, border-color 0.2s;
+      }
+      .sf-back:hover {
+        color: #ece9e3;
+        border-color: rgba(226, 178, 116, 0.6);
+      }
+      /* On phones a floating pill would sit on top of the controls. */
+      @media (max-width: 700px) {
+        .sf-back {
+          position: static;
+          margin: 0.75rem 0.75rem 0;
+        }
+      }
+    </style>
+    <script>
+      // 在 React 加载前立即设置主题，避免闪烁
+      (function () {
+        const isInIframe = window.self !== window.top;
+
+        function applyThemeToDOM(theme) {
+          document.documentElement.classList.remove("light", "dark");
+          document.documentElement.classList.add(theme);
+          document.documentElement.setAttribute("data-theme", theme);
+        }
+
+        if (isInIframe) {
+          // 监听父窗口主动推送的主题消息
+          window.addEventListener("message", function (event) {
+            if (event.data && typeof event.data.theme === "string") {
+              const theme = event.data.theme;
+              if (theme === "light" || theme === "dark") {
+                applyThemeToDOM(theme);
+              }
+            }
+          });
+        } else {
+          // Standalone: default to dark theme, matching the host site.
+          applyThemeToDOM("dark");
+        }
+      })();
+    </script>
+      <script>
+      (function () {
+        if (window.self === window.top) return;
+        var reported = {};
+        window.addEventListener("error", function (event) {
+          // 资源加载失败的 error 事件没有 message，此处仅上报 JS 运行时错误
+          if (!event || !event.message) return;
+          var key =
+            event.message + "|" + (event.filename || "") + "|" + (event.lineno || 0);
+          if (reported[key]) return; // 相同错误只上报一次，避免渲染循环刷屏
+          reported[key] = true;
+          try {
+            window.parent.postMessage(
+              {
+                type: "sandbox-runtime-error",
+                payload: {
+                  message: String(event.message).slice(0, 500),
+                  filename: event.filename || "",
+                  lineno: event.lineno || 0,
+                  colno: event.colno || 0,
+                  stack:
+                    event.error && event.error.stack
+                      ? String(event.error.stack).slice(0, 2000)
+                      : ""
+                }
+              },
+              "*"
+            );
+          } catch (e) {
+            /* 上报失败不影响页面运行 */
+          }
+        });
+      })();
+    </script>
+    <script type="module" crossorigin src="./assets/index-Dr1jA33B.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-o_AUZBfO.css">
+  </head>
+  <body>
+    <a class="sf-back" href="../" title="Back to Daniel Forero-S&aacute;nchez">&#8592; back to my site</a>
+    <div id="root"></div>
+  </body>
+</html>
