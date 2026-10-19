@@ -48,6 +48,18 @@
     "parent": null
   },
   {
+    "name": "shapefit-visualizer",
+    "description": "Visualize effect of shapefit on a template.",
+    "language": "TypeScript",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/shapefit-visualizer",
+    "updated": "2026-10-19T05:33:59Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
     "name": "geofptax",
     "description": "JAX implementation of GEO-FPT model for the bispectrum of galaxy surveys.",
     "language": "C",
