@@ -5,10 +5,10 @@ name: Update ShapeFit explorer
 # upstream and vendors the build into ./shapefit, so the copy served at
 # /shapefit/ stays in sync. Nothing is committed when the build is unchanged.
 
+# Manual runs only: this workflow never fires on a schedule or on push, so it
+# consumes Actions minutes only when started by hand from the Actions tab
+# ("Run workflow"). The vendored build stays as committed until then.
 on:
-  schedule:
-    # Weekly, Monday 04:17 UTC — after the daily publications update.
-    - cron: '17 4 * * 1'
   workflow_dispatch:
 
 jobs:
