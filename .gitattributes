@@ -1,32 +1,23 @@
 # Define standard eol format
 
-# Web Files
+# Web files
 *.html text eol=lf
 *.md text eol=lf
 *.css text eol=lf
 *.js text eol=lf
+*.svg text eol=lf
 
-# Jekyll related files
+# Data and config
+*.json text eol=lf
 *.yml text eol=lf
 
-# Git related files
-.gittattributes text eol=lf
+# Git files
+.gitattributes text eol=lf
 .gitignore text eol=lf
 .gitkeep text eol=lf
 
-# Ruby files
-*.rb text eol=lf
-Gemfile text eol=lf
-Gemfile.lock text eol=lf
-
-# Github specific fies
+# GitHub specific files
 LICENCE text eol=lf
-
-# Docker specific files
-Dockerfile text eol=lf
-
-# VSCode files
-*.json text eol=lf
 
 # General multimedia files
 *.jpg binary
