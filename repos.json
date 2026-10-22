@@ -564,6 +564,18 @@
     "parent": null
   },
   {
+    "name": "jax-power",
+    "description": "",
+    "language": "Jupyter Notebook",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/jax-power",
+    "updated": "2026-10-21T09:36:58Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": true,
+    "parent": null
+  },
+  {
     "name": "cosmoprimo",
     "description": "package for primordial cosmology",
     "language": "Python",
