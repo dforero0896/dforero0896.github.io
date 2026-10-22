@@ -1,0 +1,45 @@
+name: Update ShapeFit explorer
+
+# The ShapeFit power-spectrum explorer lives in its own repo
+# (github.com/dforero0896/shapefit-visualizer). This workflow rebuilds it from
+# upstream and vendors the build into ./shapefit, so the copy served at
+# /shapefit/ stays in sync. Nothing is committed when the build is unchanged.
+
+on:
+  schedule:
+    # Weekly, Monday 04:17 UTC — after the daily publications update.
+    - cron: '17 4 * * 1'
+  workflow_dispatch:
+
+jobs:
+  vendor:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write       # Needed to push the rebuilt app back
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: master
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22   # Upstream builds with Vite 6 (needs Node 18+)
+          # No dependency cache: the app is cloned at run time, so there is no
+          # lockfile in this repo for setup-node to key a cache on.
+
+      - name: Fetch upstream, patch, build and vendor
+        run: ./scripts/update-shapefit.sh
+
+      - name: Commit and push if the build changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add shapefit
+          if git diff --staged --quiet; then
+            echo "shapefit/ is already up to date with upstream."
+          else
+            git commit -m "Update ShapeFit explorer from upstream [skip ci]"
+            git push
+          fi
