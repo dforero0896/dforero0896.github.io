@@ -48,6 +48,18 @@
     "parent": null
   },
   {
+    "name": "jzradius",
+    "description": "An attempt at differentiable 2pcf on the gpu using jztree.",
+    "language": "Python",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/jzradius",
+    "updated": "2026-10-26T16:36:27Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": false,
+    "parent": null
+  },
+  {
     "name": "shapefit-visualizer",
     "description": "Visualize effect of shapefit on a template.",
     "language": "TypeScript",
@@ -558,6 +570,18 @@
     "stars": 1,
     "url": "https://github.com/dforero0896/JaxPM",
     "updated": "2024-07-18T12:23:38Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": true,
+    "parent": null
+  },
+  {
+    "name": "cucount",
+    "description": "",
+    "language": "Other",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/cucount",
+    "updated": "2026-10-26T17:10:02Z",
     "owner": "dforero0896",
     "isOwn": true,
     "isFork": true,
