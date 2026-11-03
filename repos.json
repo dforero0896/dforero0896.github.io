@@ -576,12 +576,24 @@
     "parent": null
   },
   {
+    "name": "cosmic_web_explorer",
+    "description": "A real-time, WebGPU-accelerated simulation of the Large-Scale Structure of the Universe. Visualize the evolution of cosmic filaments and voids from z=10 to the present day, powered by 2LPT and quasi-N-body dynamics directly in your browser.",
+    "language": "JavaScript",
+    "stars": 0,
+    "url": "https://github.com/dforero0896/cosmic_web_explorer",
+    "updated": "2026-11-03T07:25:35Z",
+    "owner": "dforero0896",
+    "isOwn": true,
+    "isFork": true,
+    "parent": null
+  },
+  {
     "name": "cucount",
     "description": "",
     "language": "Python",
     "stars": 0,
     "url": "https://github.com/dforero0896/cucount",
-    "updated": "2026-10-30T13:53:24Z",
+    "updated": "2026-11-02T06:43:08Z",
     "owner": "dforero0896",
     "isOwn": true,
     "isFork": true,
