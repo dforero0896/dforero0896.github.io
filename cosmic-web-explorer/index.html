@@ -571,9 +571,11 @@ https://github.com/nicosmo/cosmic_web_explorer
             const [initMode, setInitMode] = useState('pk');  // 'bao' or 'pk'
 
             // Language State
-            const SUPPORTED_LANGS = { en: 'English', de: 'Deutsch' };
+            const SUPPORTED_LANGS = { en: 'English', de: 'Deutsch', es: 'Español' };
             const [lang, setLang] = useState(() => {
                 const browserLang = navigator.language || navigator.userLanguage || '';
+                // Spanish is opt-in only: the default stays English unless the
+                // browser asks for German, which has always been auto-detected.
                 return browserLang.startsWith('de') ? 'de' : 'en';
             });
             const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
