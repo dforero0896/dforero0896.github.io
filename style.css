@@ -846,6 +846,62 @@ section h3 {
     }
 }
 
+/* =====================  SECONDARY / FORKED TOOL  ===================== */
+
+/* Deliberately quieter than .tool-feature: a footnote, not a showcase. */
+.tool-fork {
+    margin: 0 0 2.5rem;
+    padding: 0.85rem 1.1rem 0.9rem 1.2rem;
+    border-left: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.012);
+    font-size: 0.82rem;
+    line-height: 1.65;
+    color: var(--text-meta);
+}
+
+.tool-fork-tag {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-size: 0.54rem;
+    letter-spacing: 0.17em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+}
+
+.tool-fork p {
+    max-width: 74ch;
+    margin: 0;
+}
+
+.tool-fork a {
+    color: var(--text-dim);
+    text-decoration: underline;
+    text-decoration-color: rgba(236, 233, 227, 0.18);
+    text-underline-offset: 2px;
+    transition: color 0.25s var(--ease), text-decoration-color 0.25s var(--ease);
+}
+
+.tool-fork a:hover {
+    color: var(--accent);
+    text-decoration-color: var(--accent);
+}
+
+.tool-fork .tool-fork-link {
+    color: var(--text);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.tool-fork .tool-fork-link:hover {
+    color: var(--accent);
+}
+
+.tool-fork-link i {
+    margin-left: 0.15rem;
+    font-size: 0.68em;
+    opacity: 0.55;
+}
+
 /* =====================  REPOSITORIES  ===================== */
 
 .repo-card {

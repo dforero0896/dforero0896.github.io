@@ -1,0 +1,41 @@
+name: Update Cosmic Web Explorer fork
+
+# The Cosmic Web Explorer lives in its own repo
+# (github.com/dforero0896/cosmic_web_explorer, a fork of the original by
+# nicosmo). This workflow re-vendors the plain static files into
+# ./cosmic-web-explorer so the copy served at /cosmic-web-explorer/ stays in
+# sync. Nothing is committed when the copy is unchanged.
+
+# Manual runs only: this workflow never fires on a schedule or on push, so it
+# consumes Actions minutes only when started by hand from the Actions tab
+# ("Run workflow"). The vendored copy stays as committed until then.
+on:
+  workflow_dispatch:
+
+jobs:
+  vendor:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write       # Needed to push the re-vendored copy back
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: master
+
+      # No Node setup: the app has no build step and loads its scripts directly.
+
+      - name: Fetch the fork and vendor it
+        run: ./scripts/update-cosmic-web.sh
+
+      - name: Commit and push if the copy changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add cosmic-web-explorer
+          if git diff --staged --quiet; then
+            echo "cosmic-web-explorer/ is already up to date with the fork."
+          else
+            git commit -m "Update Cosmic Web Explorer fork from upstream [skip ci]"
+            git push
+          fi
