@@ -1,4 +1,4 @@
-﻿<!--
+﻿﻿<!--
 Cosmic Web Explorer
 A real-time cosmological visualization tool.
 Copyright (c) 2026 Nico Schuster. Licensed under the GNU AGPLv3.
@@ -679,7 +679,11 @@ https://github.com/nicosmo/cosmic_web_explorer
             const [showVoids, setShowVoids] = useState(false);
             const [showWeb, setShowWeb] = useState(false);
             const [webBasis, setWebBasis] = useState('phi');
+            const [webHierarchical, setWebHierarchical] = useState(false);
             const [webSmoothing, setWebSmoothing] = useState(6);
+            const [webSmoothingCoarse, setWebSmoothingCoarse] = useState(12);
+            // Which hierarchical class (0..8) is isolated, or null for all nine.
+            const [webHighlight, setWebHighlight] = useState(null);
             const [webThreshold, setWebThreshold] = useState(0);
             const [voidThreshold, setVoidThreshold] = useState(2.0);
             const [minVoidRadius, setMinVoidRadius] = useState(10);
@@ -2022,6 +2026,23 @@ https://github.com/nicosmo/cosmic_web_explorer
                     return { panel, x: localX, y: rawY };
                 };
 
+                // Clicking a cell of the 3x3 hierarchical legend isolates that
+                // class. Checked before the sculpt/ruler paths so a legend click
+                // is never interpreted as a sculpt stroke.
+                if (showWeb && webHierarchical) {
+                    const pointer = getPanelPointer(x, y, null);
+                    if (pointer) {
+                        const target = pointer.panel === 1 ? webDataRefB.current : webDataRef.current;
+                        const hit = (typeof webHierColorbarCellAt === 'function')
+                            ? webHierColorbarCellAt(pointer.x, pointer.y, target, { isSidebarCollapsed })
+                            : -1;
+                        if (hit >= 0) {
+                            setWebHighlight(prev => (prev === hit ? null : hit));
+                            return;
+                        }
+                    }
+                }
+
                 if (sculptActive) {
                     const pointer = getPanelPointer(x, y, null);
                     if (!pointer) return;
@@ -2502,7 +2523,10 @@ https://github.com/nicosmo/cosmic_web_explorer
                     // Hessian-eigenvalue classification of either the potential
                     // (phi) or the overdensity (delta); see src/web-classify.js.
                     if (showWeb && analysisX) {
-                        const webKey = `${webBasis}|${webSmoothing}|${webThreshold}|` +
+                        // Hierarchical mode combines a coarse potential web (level 0)
+                        // with a fine density web (level 1); single mode uses one basis.
+                        const webKey = `${webHierarchical ? 'hier' : webBasis}|` +
+                            `${webSmoothingCoarse}|${webSmoothing}|${webThreshold}|` +
                             `${currentZ.toFixed(5)}|` +
                             buildAnalysisSpaceKey(spaceMode, rsdLos, rsdAmplitudeSettled);
                         const nowMs = (typeof performance !== 'undefined' && performance.now)
@@ -2513,10 +2537,20 @@ https://github.com/nicosmo/cosmic_web_explorer
                             (nowMs - pWebCalcRef.current.t) >= throttleMs) {
                             pWebCalcRef.current.t = nowMs;
                             try {
-                                const webResult = computeWebClassification(
-                                    analysisX, analysisY, tracersPerPanel, SIM_W, SIM_H, pxPerMpc,
-                                    { basis: webBasis, smoothingMpc: webSmoothing, threshold: webThreshold, gridN: 256 }
-                                );
+                                const webResult = webHierarchical
+                                    ? computeWebHierarchy(
+                                        analysisX, analysisY, tracersPerPanel, SIM_W, SIM_H, pxPerMpc,
+                                        {
+                                            smoothingMpcCoarse: webSmoothingCoarse,
+                                            smoothingMpcFine: webSmoothing,
+                                            threshold: webThreshold,
+                                            gridN: 256
+                                        }
+                                    )
+                                    : computeWebClassification(
+                                        analysisX, analysisY, tracersPerPanel, SIM_W, SIM_H, pxPerMpc,
+                                        { basis: webBasis, smoothingMpc: webSmoothing, threshold: webThreshold, gridN: 256 }
+                                    );
                                 webResult.key = webKey;
                                 pWebDataRef.current = webResult;
                             } catch (webErr) {
@@ -2526,7 +2560,8 @@ https://github.com/nicosmo/cosmic_web_explorer
                         if (pWebDataRef.current) {
                             drawWebOverlay(ctx, pWebDataRef.current, {
                                 SIM_W, SIM_H, dict: i18n[lang], light: lightBackground,
-                                isSidebarCollapsed
+                                isSidebarCollapsed,
+                                highlight: webHighlight
                             });
                         }
                     }
@@ -2668,7 +2703,7 @@ https://github.com/nicosmo/cosmic_web_explorer
                     cancelled = true;
                     cancelAnimationFrame(animationFrameId);
                 };
-            }, [isPlaying, simDeltaT, omegaM, omegaL, w0, wa, showTracers, showGas, showDensity, showInitialOverlay, rulerActive, sculptActive, trailPercentage, trailMode, initialTracers, centers, tracerForces, tracerForcesB, tracerForces2, tracerForces2B, canvasSize, enableLocalGravity, numCircles, boxSizeMpc, BAO_RADIUS_MPC, BAO_RADIUS_MPC_B, BAO_RADIUS_PX_B, tracersPerPanel, isSidebarCollapsed, renderTrigger, cosmologyLUT, showCorrelation, showVoidProfile, showDensityPDF, showVoronoi, showVoids, voidThreshold, minVoidRadius, voidCenterMode, profileMode, splitScreen, omegaMB, omegaLB, w0B, waB, cosmologyLUTB, cosmoMode, cosmoModeB, initMode, spaceMode, rsdLos, rsdAmplitude, rsdAmplitudeSettled, multiColormap, densityColormap, gasColormap, alptEnabled, alptTable, alptTableB, alptLocalStep, showWeb, webBasis, webSmoothing, webThreshold]);
+            }, [isPlaying, simDeltaT, omegaM, omegaL, w0, wa, showTracers, showGas, showDensity, showInitialOverlay, rulerActive, sculptActive, trailPercentage, trailMode, initialTracers, centers, tracerForces, tracerForcesB, tracerForces2, tracerForces2B, canvasSize, enableLocalGravity, numCircles, boxSizeMpc, BAO_RADIUS_MPC, BAO_RADIUS_MPC_B, BAO_RADIUS_PX_B, tracersPerPanel, isSidebarCollapsed, renderTrigger, cosmologyLUT, showCorrelation, showVoidProfile, showDensityPDF, showVoronoi, showVoids, voidThreshold, minVoidRadius, voidCenterMode, profileMode, splitScreen, omegaMB, omegaLB, w0B, waB, cosmologyLUTB, cosmoMode, cosmoModeB, initMode, spaceMode, rsdLos, rsdAmplitude, rsdAmplitudeSettled, multiColormap, densityColormap, gasColormap, alptEnabled, alptTable, alptTableB, alptLocalStep, showWeb, webBasis, webHierarchical, webSmoothing, webSmoothingCoarse, webThreshold, webHighlight]);
 
             // Localized names for the two original palettes; the rest are proper nouns.
             const colormapLabel = (name) => {
@@ -3442,27 +3477,54 @@ https://github.com/nicosmo/cosmic_web_explorer
                                             </div>
                                             {showWeb && (
                                                 <div className="space-y-2 animate-in fade-in duration-200">
-                                                    <div className="grid grid-cols-2 gap-1">
+                                                    <TooltipWrapper text={i18n[lang].ttWebHierarchical}>
+                                                        <button
+                                                            id="web-hier-toggle"
+                                                            onClick={() => { setWebHierarchical(!webHierarchical); setWebHighlight(null); }}
+                                                            aria-pressed={webHierarchical}
+                                                            className={`w-full py-1.5 rounded text-xs ${webHierarchical ? 'bg-fuchsia-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
+                                                        >{i18n[lang].webHierToggle}</button>
+                                                    </TooltipWrapper>
+                                                    <div className={`grid grid-cols-2 gap-1 ${webHierarchical ? 'opacity-40 pointer-events-none' : ''}`}>
                                                         <button
                                                             onClick={() => setWebBasis('phi')}
+                                                            disabled={webHierarchical}
                                                             className={`py-1.5 rounded text-xs ${webBasis === 'phi' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
                                                         >{i18n[lang].webFieldPhi}</button>
                                                         <button
                                                             onClick={() => setWebBasis('delta')}
+                                                            disabled={webHierarchical}
                                                             className={`py-1.5 rounded text-xs ${webBasis === 'delta' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
                                                         >{i18n[lang].webFieldDelta}</button>
                                                     </div>
+                                                    {webHierarchical && (
+                                                        <TooltipWrapper text={i18n[lang].ttWebSmoothingCoarse}>
+                                                            <div className="space-y-1 w-full">
+                                                                <div className="flex justify-between text-xs">
+                                                                    <span className="text-slate-400">{i18n[lang].webHierCoarse}</span>
+                                                                    <span className="text-slate-200">{webSmoothingCoarse.toFixed(1)} {i18n[lang].mpcUnit}</span>
+                                                                </div>
+                                                                <input
+                                                                    type="range" min="2" max="20" step="0.5"
+                                                                    value={webSmoothingCoarse}
+                                                                    onChange={(e) => setWebSmoothingCoarse(parseFloat(e.target.value))}
+                                                                    aria-label={i18n[lang].webHierCoarse}
+                                                                    className="w-full accent-fuchsia-500"
+                                                                />
+                                                            </div>
+                                                        </TooltipWrapper>
+                                                    )}
                                                     <TooltipWrapper text={i18n[lang].ttWebSmoothing}>
                                                         <div className="space-y-1 w-full">
                                                             <div className="flex justify-between text-xs">
-                                                                <span className="text-slate-400">{i18n[lang].webSmoothing}</span>
+                                                                <span className="text-slate-400">{webHierarchical ? i18n[lang].webHierFine : i18n[lang].webSmoothing}</span>
                                                                 <span className="text-slate-200">{webSmoothing.toFixed(1)} {i18n[lang].mpcUnit}</span>
                                                             </div>
                                                             <input
                                                                 type="range" min="0.5" max="10" step="0.5"
                                                                 value={webSmoothing}
                                                                 onChange={(e) => setWebSmoothing(parseFloat(e.target.value))}
-                                                                aria-label={i18n[lang].webSmoothing}
+                                                                aria-label={webHierarchical ? i18n[lang].webHierFine : i18n[lang].webSmoothing}
                                                                 className="w-full accent-indigo-500"
                                                             />
                                                         </div>
@@ -3482,21 +3544,94 @@ https://github.com/nicosmo/cosmic_web_explorer
                                                             />
                                                         </div>
                                                     </TooltipWrapper>
-                                                    <div className="flex items-center gap-3 pt-1">
-                                                        <div className="flex items-center gap-1">
-                                                            <span className="w-2.5 h-2.5 rounded-sm bg-blue-500"></span>
-                                                            <span className="text-[10px] text-slate-400">{i18n[lang].webVoid}</span>
+                                                    {webHierarchical ? (
+                                                        <div className="space-y-1 pt-1">
+                                                            <div
+                                                                className="gap-0.5 items-center"
+                                                                style={{ display: 'grid', gridTemplateColumns: 'auto repeat(3, 1fr)' }}
+                                                            >
+                                                                <span className="text-[9px] text-slate-500 pr-1"></span>
+                                                                {[i18n[lang].webVoidShort, i18n[lang].webFilamentShort, i18n[lang].webKnotShort].map((t, j) => (
+                                                                    <span key={j} className="text-[9px] text-slate-500 text-center">{`${i18n[lang].webFieldDeltaShort}-${t}`}</span>
+                                                                ))}
+                                                                {[i18n[lang].webVoid, i18n[lang].webFilament, i18n[lang].webKnot].map((rowLabel, i) => (
+                                                                    <React.Fragment key={i}>
+                                                                        <span className="text-[9px] text-slate-400 pr-1">{`${i18n[lang].webFieldPhiShort}-${rowLabel}`}</span>
+                                                                        {[0, 1, 2].map((j) => {
+                                                                            const pal = (typeof WEB_HIER_COLORS !== 'undefined') ? WEB_HIER_COLORS : [];
+                                                                            const c = pal[i * 3 + j] || [128, 128, 128];
+                                                                            const finePlural = [i18n[lang].webVoidPlural, i18n[lang].webFilamentPlural, i18n[lang].webKnotPlural][j];
+                                                                            const coarsePlural = [i18n[lang].webVoidPlural, i18n[lang].webFilamentPlural, i18n[lang].webKnotPlural][i];
+                                                                            return (
+                                                                                <button
+                                                                                    key={j}
+                                                                                    type="button"
+                                                                                    onClick={() => setWebHighlight(prev => (prev === i * 3 + j ? null : i * 3 + j))}
+                                                                                    title={`${i18n[lang].webFieldDeltaShort}-${finePlural}${i18n[lang].webIn}${i18n[lang].webFieldPhiShort}-${coarsePlural}`}
+                                                                                    aria-pressed={webHighlight === i * 3 + j}
+                                                                                    aria-label={`${i18n[lang].webFieldDeltaShort}-${finePlural}${i18n[lang].webIn}${i18n[lang].webFieldPhiShort}-${coarsePlural}`}
+                                                                                    className={`h-3 rounded-sm transition ${webHighlight === i * 3 + j
+                                                                                        ? 'ring-2 ring-white'
+                                                                                        : (webHighlight === null ? 'hover:ring-1 hover:ring-slate-400' : 'opacity-35')
+                                                                                        }`}
+                                                                                    style={{ backgroundColor: `rgb(${c[0]},${c[1]},${c[2]})` }}
+                                                                                ></button>
+                                                                            );
+                                                                        })}
+                                                                    </React.Fragment>
+                                                                ))}
+                                                            </div>
+                                                            <div className="flex justify-between text-[9px] text-slate-500">
+                                                                <span>&#8595; {i18n[lang].webFieldPhiShort} {i18n[lang].webLevel0Short} R={webSmoothingCoarse.toFixed(1)}</span>
+                                                                <span>{i18n[lang].webFieldDeltaShort} {i18n[lang].webLevel1Short} R={webSmoothing.toFixed(1)} &#8594;</span>
+                                                            </div>
+                                                            {webHighlight !== null && (() => {
+                                                                const hlPal = (typeof WEB_HIER_COLORS !== 'undefined' && WEB_HIER_COLORS[webHighlight]) || [128, 128, 128];
+                                                                const hlName = (typeof webHierClassName === 'function')
+                                                                    ? webHierClassName(webHighlight, i18n[lang])
+                                                                    : '';
+                                                                return (
+                                                                    <div className="flex items-center gap-1.5 pt-0.5 border-t border-slate-800">
+                                                                        <span
+                                                                            className="w-1 h-4 rounded-sm shrink-0"
+                                                                            style={{ backgroundColor: `rgb(${hlPal[0]},${hlPal[1]},${hlPal[2]})` }}
+                                                                        ></span>
+                                                                        <div className="min-w-0">
+                                                                            <div className="text-[11px] font-semibold text-slate-100 truncate">{hlName}</div>
+                                                                            <div className="text-[9px] text-slate-500 truncate">
+                                                                                {`${i18n[lang].webFieldDeltaShort} R=${webSmoothing.toFixed(1)} ${i18n[lang].mpcUnit}${i18n[lang].webIn}${i18n[lang].webFieldPhiShort} R=${webSmoothingCoarse.toFixed(1)} ${i18n[lang].mpcUnit}`}
+                                                                            </div>
+                                                                        </div>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => setWebHighlight(null)}
+                                                                            title={i18n[lang].webHierClickAgain}
+                                                                            className="ml-auto text-[9px] text-slate-500 hover:text-slate-300 shrink-0"
+                                                                        >&#10005;</button>
+                                                                    </div>
+                                                                );
+                                                            })()}
+                                                            {webHighlight === null && (
+                                                                <p className="text-[9px] text-slate-500">{i18n[lang].webHierClickHint}</p>
+                                                            )}
                                                         </div>
-                                                        <div className="flex items-center gap-1">
-                                                            <span className="w-2.5 h-2.5 rounded-sm bg-amber-500"></span>
-                                                            <span className="text-[10px] text-slate-400">{i18n[lang].webFilament}</span>
+                                                    ) : (
+                                                        <div className="flex items-center gap-3 pt-1">
+                                                            <div className="flex items-center gap-1">
+                                                                <span className="w-2.5 h-2.5 rounded-sm bg-blue-500"></span>
+                                                                <span className="text-[10px] text-slate-400">{i18n[lang].webVoid}</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-1">
+                                                                <span className="w-2.5 h-2.5 rounded-sm bg-amber-500"></span>
+                                                                <span className="text-[10px] text-slate-400">{i18n[lang].webFilament}</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-1">
+                                                                <span className="w-2.5 h-2.5 rounded-sm bg-red-500"></span>
+                                                                <span className="text-[10px] text-slate-400">{i18n[lang].webKnot}</span>
+                                                            </div>
                                                         </div>
-                                                        <div className="flex items-center gap-1">
-                                                            <span className="w-2.5 h-2.5 rounded-sm bg-red-500"></span>
-                                                            <span className="text-[10px] text-slate-400">{i18n[lang].webKnot}</span>
-                                                        </div>
-                                                    </div>
-                                                    <p className="text-[10px] text-slate-500 leading-snug">{i18n[lang].webHint}</p>
+                                                    )}
+                                                    <p className="text-[10px] text-slate-500 leading-snug">{webHierarchical ? i18n[lang].webHierHint : i18n[lang].webHint}</p>
                                                 </div>
                                             )}
                                         </div>

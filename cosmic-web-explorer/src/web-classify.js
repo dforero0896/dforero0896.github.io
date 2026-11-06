@@ -34,6 +34,11 @@
  * reproduces exactly the reference hard classification while non-zero values
  * remain scale-free.
  *
+ * Hierarchical variant (`computeWebHierarchy`): the same machinery is run twice
+ * on one shared overdensity deposit - a coarse potential web (level 0, large
+ * scales) and a finer density web (level 1) - and the two labels are combined
+ * into decoupled classes such as 'knots-in-voids' or 'voids-in-knots'.
+ *
  * Depends on fft2d() from src/pert2lpt.js.
  */
 
@@ -49,6 +54,78 @@ const WEB_CLASS_COLORS = Object.freeze([
 ]);
 
 const WEB_CLASS_ALPHA = Object.freeze([0.32, 0.38, 0.48]);
+
+/**
+ * Hierarchical (two-level) classification palette.
+ *
+ * Row = level-0 (coarse, potential phi) environment, column = level-1 (fine,
+ * overdensity delta) environment, so the colour at index `row * 3 + col` reads
+ * as "<fine>-in-<coarse>" (e.g. index 2 = knots-in-voids, index 6 = voids-in-knots).
+ * Each coarse row keeps its own hue while each fine column darkens and
+ * saturates it, which makes the 3x3 matrix legible as a legend.
+ */
+const WEB_HIER_HUE = Object.freeze([
+    [212, 0.70],  // level-0 void     - blue
+    [36, 0.85],   // level-0 filament - amber
+    [352, 0.75]   // level-0 knot     - red
+]);
+
+const WEB_HIER_SHADE = Object.freeze([
+    [0.76, 0.55], // level-1 void     - pale
+    [0.55, 0.95], // level-1 filament - mid
+    [0.38, 1.00]  // level-1 knot     - deep
+]);
+
+/** HSL (h in degrees, s and l in [0,1]) to an [r,g,b] byte triple. */
+function webHslToRgb(hue, sat, lum) {
+    const h = ((hue % 360) + 360) % 360;
+    const s = Math.max(0, Math.min(1, sat));
+    const l = Math.max(0, Math.min(1, lum));
+    const c = (1 - Math.abs(2 * l - 1)) * s;
+    const hp = h / 60;
+    const x = c * (1 - Math.abs((hp % 2) - 1));
+    let r = 0; let g = 0; let b = 0;
+    if (hp < 1) { r = c; g = x; }
+    else if (hp < 2) { r = x; g = c; }
+    else if (hp < 3) { g = c; b = x; }
+    else if (hp < 4) { g = x; b = c; }
+    else if (hp < 5) { r = x; b = c; }
+    else { r = c; b = x; }
+    const m = l - c / 2;
+    return [
+        Math.round(255 * Math.max(0, Math.min(1, r + m))),
+        Math.round(255 * Math.max(0, Math.min(1, g + m))),
+        Math.round(255 * Math.max(0, Math.min(1, b + m)))
+    ];
+}
+
+function webBuildHierPalette() {
+    const colors = [];
+    const alphas = [];
+    for (let coarse = 0; coarse < 3; coarse++) {
+        const [hue, sat] = WEB_HIER_HUE[coarse];
+        for (let fine = 0; fine < 3; fine++) {
+            const [lum, satScale] = WEB_HIER_SHADE[fine];
+            colors.push(webHslToRgb(hue, sat * satScale, lum));
+            // Coarser parents and finer-substructure markers both get a little
+            // more weight, keeping the overlay readable under the tracers.
+            alphas.push(Math.min(0.5, 0.27 + 0.03 * coarse + 0.05 * fine));
+        }
+    }
+    return { colors, alphas };
+}
+
+const _webHierPalette = webBuildHierPalette();
+
+/** RGB colours of the 9 hierarchical classes, index = coarse * 3 + fine. */
+const WEB_HIER_COLORS = Object.freeze(_webHierPalette.colors);
+
+/** Overlay alpha of the 9 hierarchical classes, index = coarse * 3 + fine. */
+const WEB_HIER_ALPHA = Object.freeze(_webHierPalette.alphas);
+
+function _webNow() {
+    return (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+}
 
 function webFFT2D(re, im, gridN, inverse) {
     if (typeof fft2d === 'function') {
@@ -112,58 +189,41 @@ function webEigenvalues2D(fxx, fyy, fxy) {
     return [mean + r, mean - r];
 }
 
-/**
- * Compute the 2D cosmic web classification of the tracer distribution.
- *
- * @param {Float32Array|Array} physX - tracer x positions (panel pixels)
- * @param {Float32Array|Array} physY - tracer y positions (panel pixels)
- * @param {number} N - number of tracers
- * @param {number} simW - panel width in pixels
- * @param {number} simH - panel height in pixels
- * @param {number} pxPerMpc - pixel-to-Mpc scale (Mpc, h = PLANCK_H)
- * @param {object} [opts]
- * @param {'phi'|'delta'} [opts.basis='phi']
- * @param {number} [opts.smoothingMpc=2] - Gaussian smoothing scale in h^-1 Mpc
- * @param {number} [opts.threshold=0] - eigenvalue threshold in sigma units
- * @param {number} [opts.fixRidge=0.1] - ridge-fix half width in sigma units (0 disables)
- * @param {number} [opts.gridN=0] - grid side (power of two, auto by default)
- * @returns {object} classification result
- */
-function computeWebClassification(physX, physY, N, simW, simH, pxPerMpc, opts) {
-    const o = opts || {};
-    const t0 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
-
-    const basis = o.basis === 'delta' ? 'delta' : 'phi';
-    const smoothingMpc = Math.max(0, o.smoothingMpc === undefined ? 2 : o.smoothingMpc);
-    const thresholdSig = o.threshold === undefined ? 0 : o.threshold;
-    const fixRidgeSig = o.fixRidge === undefined ? 0.1 : o.fixRidge;
-
-    const gridN = webChooseGridN(N, o.gridN);
-    const gridN2 = gridN * gridN;
-
-    if (!(pxPerMpc > 0) || !(N > 0) || !(simW > 0) || !(simH > 0)) {
-        return {
-            gridN, simW, simH, basis, classes: new Uint8Array(gridN2),
-            counts: [0, 0, 0], threshold: 0, fixRidge: 0, sigma1: 0,
-            smoothingMpc, elapsedMs: 0
-        };
-    }
-
-    // Physical box size in Mpc/h (same convention as the P(k) analysis).
+/** Physical box size in Mpc/h (same convention as the P(k) analysis). */
+function webBoxGeometry(simW, simH, pxPerMpc, gridN) {
     const h = typeof PLANCK_H === 'number' ? PLANCK_H : 0.674;
     const LxMpcH = (simW / pxPerMpc) * h;
     const LyMpcH = (simH / pxPerMpc) * h;
-    const dxMpcH = LxMpcH / gridN;
-    const dyMpcH = LyMpcH / gridN;
+    return { LxMpcH, LyMpcH, dxMpcH: LxMpcH / gridN, dyMpcH: LyMpcH / gridN };
+}
 
-    // --- 1. Overdensity grid (CIC, periodic) ---
-    // An externally supplied overdensity grid can be used instead of depositing
-    // the tracers (handy for tests and for reusing an already smoothed field).
-    const delta = (o.deltaGrid && o.deltaGrid.length === gridN2)
-        ? Float64Array.from(o.deltaGrid)
-        : webDepositOverdensity(physX, physY, N, gridN, simW, simH);
+/**
+ * Classify one already-deposited overdensity grid with a single field
+ * definition (basis + smoothing scale + threshold).
+ *
+ * @param {Float64Array} delta - periodic overdensity grid, length gridN^2
+ * @param {number} gridN - grid side
+ * @param {object} geom - result of webBoxGeometry()
+ * @param {object} [opts]
+ * @param {'phi'|'delta'} [opts.basis='phi']
+ * @param {number} [opts.smoothingMpc=2] - Gaussian smoothing in h^-1 Mpc
+ * @param {number} [opts.thresholdSig=0] - threshold in sigma units
+ * @param {number} [opts.fixRidgeSig=0.1] - ridge-fix half width in sigma units
+ * @returns {{classes: Uint8Array, counts: number[], sigma1: number,
+ *            threshold: number, fixRidge: number,
+ *            basis: string, smoothingMpc: number}}
+ */
+function webClassifyGrid(delta, gridN, geom, opts) {
+    const o = opts || {};
+    const basis = o.basis === 'delta' ? 'delta' : 'phi';
+    const smoothingMpc = Math.max(0, o.smoothingMpc === undefined ? 2 : o.smoothingMpc);
+    const thresholdSig = o.thresholdSig === undefined ? 0 : o.thresholdSig;
+    const fixRidgeSig = o.fixRidgeSig === undefined ? 0.1 : o.fixRidgeSig;
 
-    // --- 2. FFT, Gaussian smoothing, and (for phi) Poisson solve ---
+    const gridN2 = gridN * gridN;
+    const { LxMpcH, LyMpcH, dxMpcH, dyMpcH } = geom;
+
+    // --- 1. FFT, Gaussian smoothing, and (for phi) Poisson solve ---
     const re = new Float64Array(gridN2);
     const im = new Float64Array(gridN2);
     re.set(delta);
@@ -290,18 +350,218 @@ function computeWebClassification(physX, physY, N, simW, simH, pxPerMpc, opts) {
         counts[web]++;
     }
 
-    const t1 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
     return {
+        classes,
+        counts,
+        sigma1,
+        threshold: th,
+        fixRidge: fr,
+        thresholdSig,
+        fixRidgeSig,
+        basis,
+        smoothingMpc
+    };
+}
+
+/** Empty single-level result, used for degenerate inputs. */
+function _webEmptyResult(gridN, simW, simH, basis, smoothingMpc, thresholdSig, fixRidgeSig) {
+    return {
+        hierarchical: false,
         gridN, simW, simH, basis,
         smoothingMpc,
         thresholdSig,
         fixRidgeSig,
-        sigma1,
-        threshold: th,
-        fixRidge: fr,
-        classes,
+        sigma1: 0,
+        threshold: 0,
+        fixRidge: 0,
+        classes: new Uint8Array(gridN * gridN),
+        counts: [0, 0, 0],
+        elapsedMs: 0
+    };
+}
+
+/** Empty two-level result, used for degenerate inputs. */
+function _webEmptyHierResult(gridN, simW, simH, coarseMpc, fineMpc, thresholdSig, fixRidgeSig) {
+    const gridN2 = gridN * gridN;
+    const counts = new Array(9).fill(0);
+    return {
+        hierarchical: true,
+        gridN, simW, simH,
+        basis: 'hierarchy',
+        smoothingMpc: fineMpc,
+        smoothingMpcCoarse: coarseMpc,
+        smoothingMpcFine: fineMpc,
+        thresholdSig,
+        fixRidgeSig,
+        sigma1: 0,
+        sigma1Coarse: 0,
+        sigma1Fine: 0,
+        threshold: 0,
+        fixRidge: 0,
+        classes: new Uint8Array(gridN2),
+        hierLevel0: new Uint8Array(gridN2),
+        hierLevel1: new Uint8Array(gridN2),
         counts,
-        elapsedMs: t1 - t0
+        countsLevel0: [0, 0, 0],
+        countsLevel1: [0, 0, 0],
+        palette: WEB_HIER_COLORS,
+        alphas: WEB_HIER_ALPHA,
+        elapsedMs: 0
+    };
+}
+
+/**
+ * Compute the 2D cosmic web classification of the tracer distribution.
+ *
+ * @param {Float32Array|Array} physX - tracer x positions (panel pixels)
+ * @param {Float32Array|Array} physY - tracer y positions (panel pixels)
+ * @param {number} N - number of tracers
+ * @param {number} simW - panel width in pixels
+ * @param {number} simH - panel height in pixels
+ * @param {number} pxPerMpc - pixel-to-Mpc scale (Mpc, h = PLANCK_H)
+ * @param {object} [opts]
+ * @param {'phi'|'delta'} [opts.basis='phi']
+ * @param {number} [opts.smoothingMpc=2] - Gaussian smoothing scale in h^-1 Mpc
+ * @param {number} [opts.threshold=0] - eigenvalue threshold in sigma units
+ * @param {number} [opts.fixRidge=0.1] - ridge-fix half width in sigma units (0 disables)
+ * @param {number} [opts.gridN=0] - grid side (power of two, auto by default)
+ * @param {Float64Array} [opts.deltaGrid] - use this overdensity grid instead of depositing
+ * @returns {object} classification result
+ */
+function computeWebClassification(physX, physY, N, simW, simH, pxPerMpc, opts) {
+    const o = opts || {};
+    const t0 = _webNow();
+
+    const basis = o.basis === 'delta' ? 'delta' : 'phi';
+    const smoothingMpc = Math.max(0, o.smoothingMpc === undefined ? 2 : o.smoothingMpc);
+    const thresholdSig = o.threshold === undefined ? 0 : o.threshold;
+    const fixRidgeSig = o.fixRidge === undefined ? 0.1 : o.fixRidge;
+
+    const gridN = webChooseGridN(N, o.gridN);
+    const gridN2 = gridN * gridN;
+
+    if (!(pxPerMpc > 0) || !(N > 0) || !(simW > 0) || !(simH > 0)) {
+        return _webEmptyResult(gridN, simW, simH, basis, smoothingMpc, thresholdSig, fixRidgeSig);
+    }
+
+    // --- 1. Overdensity grid (CIC, periodic) ---
+    // An externally supplied overdensity grid can be used instead of depositing
+    // the tracers (handy for tests and for reusing an already smoothed field).
+    const delta = (o.deltaGrid && o.deltaGrid.length === gridN2)
+        ? Float64Array.from(o.deltaGrid)
+        : webDepositOverdensity(physX, physY, N, gridN, simW, simH);
+
+    const geom = webBoxGeometry(simW, simH, pxPerMpc, gridN);
+    const res = webClassifyGrid(delta, gridN, geom, { basis, smoothingMpc, thresholdSig, fixRidgeSig });
+
+    return {
+        hierarchical: false,
+        gridN, simW, simH, basis,
+        smoothingMpc,
+        thresholdSig,
+        fixRidgeSig,
+        sigma1: res.sigma1,
+        threshold: res.threshold,
+        fixRidge: res.fixRidge,
+        classes: res.classes,
+        counts: res.counts,
+        elapsedMs: _webNow() - t0
+    };
+}
+
+/**
+ * Hierarchical (two-level) cosmic web classification.
+ *
+ * Level 0 is the large-scale web built from the gravitational potential (phi),
+ * which is the natural field for the coarse, large-scale environment. Level 1
+ * is the finer web built from the smoothed overdensity (delta), which resolves
+ * the substructure inside each level-0 region.
+ *
+ * The two levels are combined into decoupled classes: the returned `classes`
+ * array holds `level0 * 3 + level1` per cell, which reads as
+ * "<level-1 class>-in-<level-0 class>" - e.g. index 2 (= 0*3+2) is
+ * 'knots-in-voids' (a delta-knot inside a large-scale phi-void) and index 6
+ * (= 2*3+0) is 'voids-in-knots'. The single overdensity deposit is shared by both
+ * levels, so a hierarchical pass costs about one deposit plus two Hessian
+ * evaluations.
+ *
+ * @param {Float32Array|Array} physX
+ * @param {Float32Array|Array} physY
+ * @param {number} N
+ * @param {number} simW
+ * @param {number} simH
+ * @param {number} pxPerMpc
+ * @param {object} [opts]
+ * @param {number} [opts.smoothingMpcCoarse=12] - level-0 (phi) smoothing in h^-1 Mpc
+ * @param {number} [opts.smoothingMpcFine=3] - level-1 (delta) smoothing in h^-1 Mpc
+ * @param {number} [opts.threshold=0] - threshold in sigma units, applied to both levels
+ * @param {number} [opts.fixRidge=0.1] - ridge-fix half width in sigma units
+ * @param {number} [opts.gridN=0] - grid side (power of two, auto by default)
+ * @param {Float64Array} [opts.deltaGrid] - use this overdensity grid instead of depositing
+ * @returns {object} hierarchical classification result
+ */
+function computeWebHierarchy(physX, physY, N, simW, simH, pxPerMpc, opts) {
+    const o = opts || {};
+    const t0 = _webNow();
+
+    const coarseMpc = Math.max(0, o.smoothingMpcCoarse === undefined ? 12 : o.smoothingMpcCoarse);
+    const fineMpc = Math.max(0, o.smoothingMpcFine === undefined ? 3 : o.smoothingMpcFine);
+    const thresholdSig = o.threshold === undefined ? 0 : o.threshold;
+    const fixRidgeSig = o.fixRidge === undefined ? 0.1 : o.fixRidge;
+
+    const gridN = webChooseGridN(N, o.gridN);
+    const gridN2 = gridN * gridN;
+
+    if (!(pxPerMpc > 0) || !(N > 0) || !(simW > 0) || !(simH > 0)) {
+        return _webEmptyHierResult(gridN, simW, simH, coarseMpc, fineMpc, thresholdSig, fixRidgeSig);
+    }
+
+    const delta = (o.deltaGrid && o.deltaGrid.length === gridN2)
+        ? Float64Array.from(o.deltaGrid)
+        : webDepositOverdensity(physX, physY, N, gridN, simW, simH);
+
+    const geom = webBoxGeometry(simW, simH, pxPerMpc, gridN);
+
+    // Level 0: large-scale potential web.
+    const level0 = webClassifyGrid(delta, gridN, geom, {
+        basis: 'phi', smoothingMpc: coarseMpc, thresholdSig, fixRidgeSig
+    });
+    // Level 1: finer density web, i.e. the substructure inside each level-0 cell.
+    const level1 = webClassifyGrid(delta, gridN, geom, {
+        basis: 'delta', smoothingMpc: fineMpc, thresholdSig, fixRidgeSig
+    });
+
+    const classes = new Uint8Array(gridN2);
+    const counts = new Array(9).fill(0);
+    for (let i = 0; i < gridN2; i++) {
+        const combined = level0.classes[i] * 3 + level1.classes[i];
+        classes[i] = combined;
+        counts[combined]++;
+    }
+
+    return {
+        hierarchical: true,
+        gridN, simW, simH,
+        basis: 'hierarchy',
+        smoothingMpc: fineMpc,
+        smoothingMpcCoarse: coarseMpc,
+        smoothingMpcFine: fineMpc,
+        thresholdSig,
+        fixRidgeSig,
+        sigma1: level1.sigma1,
+        sigma1Coarse: level0.sigma1,
+        sigma1Fine: level1.sigma1,
+        threshold: level1.threshold,
+        fixRidge: level1.fixRidge,
+        classes,
+        hierLevel0: level0.classes,
+        hierLevel1: level1.classes,
+        counts,
+        countsLevel0: level0.counts,
+        countsLevel1: level1.counts,
+        palette: WEB_HIER_COLORS,
+        alphas: WEB_HIER_ALPHA,
+        elapsedMs: _webNow() - t0
     };
 }
 
@@ -311,9 +571,17 @@ if (typeof module !== 'undefined' && module.exports) {
         WEB_CLASS_KEYS,
         WEB_CLASS_COLORS,
         WEB_CLASS_ALPHA,
+        WEB_HIER_HUE,
+        WEB_HIER_SHADE,
+        WEB_HIER_COLORS,
+        WEB_HIER_ALPHA,
         webChooseGridN,
         webDepositOverdensity,
         webEigenvalues2D,
-        computeWebClassification
+        webHslToRgb,
+        webBoxGeometry,
+        webClassifyGrid,
+        computeWebClassification,
+        computeWebHierarchy
     };
 }

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Cosmic Web Explorer
  * * A real-time cosmological visualization tool.
  * Copyright (c) 2026 Nico Schuster. Licensed under the GNU AGPLv3.
@@ -387,21 +387,31 @@ function drawVoidStats(ctx, voidResults, voidThreshold, minVoidRadius, pxPerMpc,
 function drawWebColorbar(ctx, data, opts) {
     const o = opts || {};
     const d = o.dict || {};
+    const light = !!o.light;
+    // The sidebar overlays the left edge of the canvas when it is expanded;
+    // keep the legend clear of it, mirroring how drawScaleBar offsets.
+    const defaultX = o.isSidebarCollapsed === false ? 336 : 18;
+    const boxX = o.boxX === undefined ? defaultX : o.boxX;
+    const boxY = o.boxY === undefined ? 18 : o.boxY;
+
+    if (data && data.hierarchical) {
+        drawWebHierColorbar(ctx, data, {
+            dict: d, light, boxX, boxY,
+            isSidebarCollapsed: o.isSidebarCollapsed,
+            highlight: o.highlight
+        });
+        return;
+    }
+
     const colors = (typeof WEB_CLASS_COLORS !== 'undefined') ? WEB_CLASS_COLORS : [[59, 130, 246], [245, 158, 11], [239, 68, 68]];
     const labels = [d.webVoid || 'Void', d.webFilament || 'Filament', d.webKnot || 'Knot'];
     const title = d.webClassLegend || 'Cosmic web';
-    const light = !!o.light;
 
     const cellW = 92;
     const cellH = 14;
     const pad = 10;
     const boxW = cellW * labels.length + pad * 2;
     const boxH = 80;
-    // The sidebar overlays the left edge of the canvas when it is expanded;
-    // keep the legend clear of it, mirroring how drawScaleBar offsets.
-    const defaultX = o.isSidebarCollapsed === false ? 336 : 18;
-    const boxX = o.boxX === undefined ? defaultX : o.boxX;
-    const boxY = o.boxY === undefined ? 18 : o.boxY;
 
     ctx.save();
     ctx.textAlign = 'center';
@@ -442,6 +452,199 @@ function drawWebColorbar(ctx, data, opts) {
 }
 
 /**
+ * Geometry of the hierarchical legend box. Shared by the drawing code and by
+ * click hit-testing so the two can never drift apart.
+ *
+ * @param {object} data - result of computeWebHierarchy
+ * @param {object} opts - { boxX, boxY, isSidebarCollapsed }
+ */
+function webHierColorbarGeometry(data, opts) {
+    const o = opts || {};
+    const defaultX = o.isSidebarCollapsed === false ? 336 : 18;
+    const boxX = o.boxX === undefined ? defaultX : o.boxX;
+    const boxY = o.boxY === undefined ? 18 : o.boxY;
+    const cellW = 74;
+    const cellH = 16;
+    const rowLabelW = 78;
+    const pad = 10;
+    return {
+        boxX, boxY, pad, rowLabelW, cellW, cellH,
+        boxW: pad * 2 + rowLabelW + cellW * 3,
+        boxH: 122,
+        gridX: boxX + pad + rowLabelW,
+        gridY: boxY + 44
+    };
+}
+
+/**
+ * Map a pointer position, in canvas coordinates, onto a hierarchical class.
+ *
+ * @returns {number} class index 0..8, or -1 when outside the matrix cells.
+ */
+function webHierColorbarCellAt(mx, my, data, opts) {
+    if (!data || !data.hierarchical) return -1;
+    const g = webHierColorbarGeometry(data, opts);
+    if (mx < g.gridX || mx >= g.gridX + g.cellW * 3) return -1;
+    if (my < g.gridY || my >= g.gridY + g.cellH * 3) return -1;
+    const j = Math.floor((mx - g.gridX) / g.cellW);
+    const i = Math.floor((my - g.gridY) / g.cellH);
+    return i * 3 + j;
+}
+
+/**
+ * Readable name of a hierarchical class, e.g. "voids-in-filaments".
+ * Class index is coarse (level 0) * 3 + fine (level 1).
+ *
+ * @param {number} idx - class index 0..8
+ * @param {object} dict - i18n dictionary
+ */
+function webHierClassName(idx, dict) {
+    const d = dict || {};
+    const voids = d.webVoidPlural || 'voids';
+    const filaments = d.webFilamentPlural || 'filaments';
+    const knots = d.webKnotPlural || 'knots';
+    const i = Math.floor(idx / 3), j = idx % 3;
+    if (!(idx >= 0 && idx <= 8)) return '';
+    return `${[voids, filaments, knots][j]}${d.webIn || '-in-'}${[voids, filaments, knots][i]}`;
+}
+
+/**
+ * Colorbar for the hierarchical classification: a 3x3 matrix whose rows are the
+ * level-0 (coarse, phi) environments and whose columns are the level-1 (fine,
+ * delta) environments. Cell (i, j) therefore reads "<fine j>-in-<coarse i>".
+ *
+ * When a cell is highlighted the legend dims the other eight and prints a
+ * caption naming the isolated environment, so the picture is self-describing.
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {object} data - result of computeWebHierarchy
+ * @param {object} opts - { dict, light, boxX, boxY, isSidebarCollapsed, highlight }
+ */
+function drawWebHierColorbar(ctx, data, opts) {
+    const o = opts || {};
+    const d = o.dict || {};
+    const light = !!o.light;
+    const palette = data.palette || (typeof WEB_HIER_COLORS !== 'undefined' ? WEB_HIER_COLORS : []);
+    const hl = (o.highlight === undefined || o.highlight === null || o.highlight < 0) ? -1 : o.highlight;
+
+    const coarse = [d.webVoid || 'Void', d.webFilament || 'Filament', d.webKnot || 'Knot'];
+    const fine = [d.webVoidShort || 'void', d.webFilamentShort || 'fil', d.webKnotShort || 'knot'];
+    // Tagging every axis entry with its field makes the direction unmistakable:
+    // the cell label always reads "<delta level>-in-<phi level>", so
+    // knots-in-voids is a delta-knot inside a large-scale phi-void.
+    const phiTag = d.webFieldPhiShort || '\u03c6';
+    const deltaTag = d.webFieldDeltaShort || '\u03b4';
+
+    const g = webHierColorbarGeometry(data, opts);
+    const { boxX, boxY, boxW, boxH, pad, cellW, cellH, gridX, gridY } = g;
+
+    ctx.save();
+    ctx.textBaseline = 'alphabetic';
+
+    ctx.fillStyle = light ? 'rgba(255,255,255,0.86)' : 'rgba(15,23,42,0.78)';
+    ctx.fillRect(boxX, boxY, boxW, boxH);
+    ctx.strokeStyle = light ? 'rgba(0,0,0,0.18)' : 'rgba(255,255,255,0.18)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(boxX + 0.5, boxY + 0.5, boxW - 1, boxH - 1);
+
+    // Title.
+    const title = d.webClassLegendHier || 'Cosmic web (hierarchical)';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = light ? '#111827' : '#e2e8f0';
+    ctx.font = 'bold 12px "Inter", sans-serif';
+    ctx.fillText(title, boxX + boxW / 2, boxY + 17);
+
+    // Column headers: the finer level 1 (delta) environment.
+    ctx.fillStyle = light ? 'rgba(17,24,39,0.70)' : 'rgba(203,213,225,0.72)';
+    ctx.font = '10px "Inter", sans-serif';
+    ctx.textAlign = 'center';
+    for (let j = 0; j < 3; j++) {
+        ctx.fillText(`${deltaTag}-${fine[j]}`, gridX + j * cellW + cellW / 2, gridY - 6);
+    }
+    // Name the row axis next to the labels it applies to, so nobody has to
+    // infer the direction from an arrow in the opposite corner.
+    ctx.textAlign = 'left';
+    ctx.fillText(`\u2193 ${d.webLevel0Short || 'L0'}`, boxX + pad, gridY - 6);
+
+    // Matrix cells.
+    for (let i = 0; i < 3; i++) {
+        const y = gridY + i * cellH;
+        // Row label: the coarser level 0 (phi) parent environment.
+        ctx.globalAlpha = (hl >= 0 && Math.floor(hl / 3) !== i) ? 0.4 : 1;
+        ctx.fillStyle = light ? '#111827' : '#cbd5e1';
+        ctx.font = '11px "Inter", sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(`${phiTag}-${coarse[i]}`, gridX - 6, y + cellH - 4);
+        ctx.globalAlpha = 1;
+
+        for (let j = 0; j < 3; j++) {
+            const idx = i * 3 + j;
+            const c = palette[idx] || [128, 128, 128];
+            const x = gridX + j * cellW;
+            ctx.globalAlpha = (hl >= 0 && idx !== hl) ? 0.28 : 1;
+            ctx.fillStyle = `rgb(${c[0]},${c[1]},${c[2]})`;
+            ctx.fillRect(x, y, cellW, cellH);
+            ctx.strokeStyle = light ? 'rgba(0,0,0,0.25)' : 'rgba(0,0,0,0.35)';
+            ctx.strokeRect(x + 0.5, y + 0.5, cellW - 1, cellH - 1);
+            ctx.globalAlpha = 1;
+            if (idx === hl) {
+                ctx.strokeStyle = light ? '#111827' : '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(x + 1, y + 1, cellW - 2, cellH - 2);
+                ctx.lineWidth = 1;
+            }
+        }
+    }
+
+    // Axis / scale annotation, so an exported still is self-describing.
+    ctx.textAlign = 'left';
+    ctx.fillStyle = light ? 'rgba(17,24,39,0.62)' : 'rgba(203,213,225,0.62)';
+    ctx.font = '10px "Inter", sans-serif';
+    const mpc = d.mpcUnit || 'Mpc';
+    ctx.fillText(`${d.webLevel0Short || 'L0'} φ R=${(data.smoothingMpcCoarse || 0).toFixed(1)} ${mpc}` +
+        ` · ${d.webLevel1Short || 'L1'} δ R=${(data.smoothingMpcFine || 0).toFixed(1)} ${mpc}`,
+        boxX + pad, boxY + boxH - 8);
+
+    if (hl >= 0) {
+        // Caption naming the isolated environment, with its area share.
+        const counts = data.counts || [];
+        const total = counts.reduce((a, b) => a + b, 0) || 1;
+        const share = (counts[hl] || 0) / total * 100;
+        const pillY = boxY + boxH + 6;
+        const pillH = 54;
+        const sc = palette[hl] || [128, 128, 128];
+        const unit = d.mpcUnit || 'Mpc';
+        // Spell out the spatial reading so the label cannot be misread: the
+        // delta-level structure sits inside the phi-level (large-scale) region.
+        const roleLine = `${deltaTag} R=${(data.smoothingMpcFine || 0).toFixed(1)} ${unit}` +
+            `${d.webIn || '-in-'}${phiTag} R=${(data.smoothingMpcCoarse || 0).toFixed(1)} ${unit}`;
+        ctx.fillStyle = light ? 'rgba(255,255,255,0.92)' : 'rgba(15,23,42,0.88)';
+        ctx.fillRect(boxX, pillY, boxW, pillH);
+        ctx.fillStyle = `rgb(${sc[0]},${sc[1]},${sc[2]})`;
+        ctx.fillRect(boxX, pillY, 5, pillH);
+        ctx.strokeStyle = light ? 'rgba(0,0,0,0.18)' : 'rgba(255,255,255,0.18)';
+        ctx.strokeRect(boxX + 0.5, pillY + 0.5, boxW - 1, pillH - 1);
+        ctx.textAlign = 'left';
+        ctx.fillStyle = light ? '#111827' : '#e2e8f0';
+        ctx.font = 'bold 13px "Inter", sans-serif';
+        ctx.fillText(webHierClassName(hl, d), boxX + 13, pillY + 17);
+        ctx.fillStyle = light ? 'rgba(17,24,39,0.78)' : 'rgba(203,213,225,0.78)';
+        ctx.font = '10px "Inter", sans-serif';
+        ctx.fillText(roleLine, boxX + 13, pillY + 31);
+        ctx.fillStyle = light ? 'rgba(17,24,39,0.60)' : 'rgba(203,213,225,0.60)';
+        ctx.font = '9px "Inter", sans-serif';
+        ctx.fillText(`${share.toFixed(1)}% · ${d.webHierClickAgain || 'click again to clear'}`,
+            boxX + 13, pillY + 45);
+    } else {
+        ctx.textAlign = 'left';
+        ctx.fillStyle = light ? 'rgba(17,24,39,0.55)' : 'rgba(203,213,225,0.55)';
+        ctx.font = '9px "Inter", sans-serif';
+        ctx.fillText(d.webHierClickHint || 'click a cell to isolate it', boxX + pad, boxY + boxH + 12);
+    }
+    ctx.restore();
+}
+
+/**
  * Draw the 2D cosmic web classification as a translucent background layer.
  *
  * @param {CanvasRenderingContext2D} ctx
@@ -454,10 +657,18 @@ function drawWebOverlay(ctx, data, opts) {
     const SIM_W = o.SIM_W || data.simW;
     const SIM_H = o.SIM_H || data.simH;
     const gridN = data.gridN;
-    const colors = (typeof WEB_CLASS_COLORS !== 'undefined') ? WEB_CLASS_COLORS : [[59, 130, 246], [245, 158, 11], [239, 68, 68]];
-    const alphas = (typeof WEB_CLASS_ALPHA !== 'undefined') ? WEB_CLASS_ALPHA : [0.32, 0.38, 0.48];
+    const colors = data.palette
+        || ((typeof WEB_CLASS_COLORS !== 'undefined') ? WEB_CLASS_COLORS : [[59, 130, 246], [245, 158, 11], [239, 68, 68]]);
+    const alphas = data.alphas
+        || ((typeof WEB_CLASS_ALPHA !== 'undefined') ? WEB_CLASS_ALPHA : [0.32, 0.38, 0.48]);
 
-    if (!data._canvas) {
+    // Isolating one hierarchical class dims the rest so the selected environment
+    // carries the picture on its own. Keyed into the cache below, since the
+    // pixel buffer depends on it.
+    const hlRaw = o.highlight;
+    const hl = (hlRaw === undefined || hlRaw === null || hlRaw < 0) ? -1 : hlRaw;
+
+    if (!data._canvas || data._canvasKey !== hl) {
         const cv = document.createElement('canvas');
         cv.width = gridN;
         cv.height = gridN;
@@ -471,10 +682,17 @@ function drawWebOverlay(ctx, data, opts) {
             px[4 * i] = c[0];
             px[4 * i + 1] = c[1];
             px[4 * i + 2] = c[2];
-            px[4 * i + 3] = Math.round(a * 255);
+            let outA = a;
+            if (hl >= 0) {
+                // Selected class: push towards opaque. Everything else: a faint
+                // ghost, so the surrounding large-scale structure stays readable.
+                outA = (cls === hl) ? Math.min(1, a * 2.2 + 0.25) : 0.045;
+            }
+            px[4 * i + 3] = Math.round(outA * 255);
         }
         c2.putImageData(img, 0, 0);
         data._canvas = cv;
+        data._canvasKey = hl;
     }
 
     ctx.save();
@@ -487,7 +705,8 @@ function drawWebOverlay(ctx, data, opts) {
         drawWebColorbar(ctx, data, {
             dict: o.dict,
             light: o.light,
-            isSidebarCollapsed: o.isSidebarCollapsed
+            isSidebarCollapsed: o.isSidebarCollapsed,
+            highlight: hl >= 0 ? hl : null
         });
     }
 }
@@ -1744,4 +1963,13 @@ function drawStatsChart(ctx, opts) {
             ctx.fillText(Math.round(pBaoRadiusMpc), baoX, axisY);
         }
     }
+}
+
+// Exported for unit checks only; the browser build relies on these being global.
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        webHierColorbarGeometry,
+        webHierColorbarCellAt,
+        webHierClassName
+    };
 }
