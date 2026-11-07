@@ -30,6 +30,7 @@ https://github.com/nicosmo/cosmic_web_explorer
     <script src="https://cdn.tailwindcss.com/3.4.16"></script>
     <script src="https://unpkg.com/d3-delaunay@6.0.4"></script>
     <script src="src/constants.js"></script>
+    <script src="src/galaxy-bias.js"></script>
     <script src="src/cosmology.js"></script>
     <script src="src/webgl-utils.js"></script>
     <script src="src/gpu-gravity.js"></script>
@@ -694,6 +695,27 @@ https://github.com/nicosmo/cosmic_web_explorer
             const [secEvolution, setSecEvolution] = useState(true);
             const [secCosmology, setSecCosmology] = useState(true);
             const [secTools, setSecTools] = useState(true);
+            const [secBias, setSecBias] = useState(true);
+
+            // --- Galaxy bias model (display/analysis layer only) ---
+            // N_loc(rho) ∝ rho^α · σ(β_l(ρ−ρ_l)) · σ(−β_h(ρ−ρ_h)), the same
+            // equation implemented in src/galaxy-bias.js.
+            const [biasEnabled, setBiasEnabled] = useState(false);
+            const [biasAlpha, setBiasAlpha] = useState(GalaxyBias.DEFAULTS.alpha);
+            const [biasBetaLow, setBiasBetaLow] = useState(GalaxyBias.DEFAULTS.betaLow);
+            const [biasRhoLow, setBiasRhoLow] = useState(GalaxyBias.DEFAULTS.rhoLow);
+            const [biasBetaHigh, setBiasBetaHigh] = useState(GalaxyBias.DEFAULTS.betaHigh);
+            const [biasRhoHigh, setBiasRhoHigh] = useState(GalaxyBias.DEFAULTS.rhoHigh);
+            const biasParams = useMemo(() => GalaxyBias.makeParams(
+                biasAlpha, biasBetaLow, biasRhoLow, biasBetaHigh, biasRhoHigh
+            ), [biasAlpha, biasBetaLow, biasRhoLow, biasBetaHigh, biasRhoHigh]);
+            const resetBias = () => {
+                setBiasAlpha(GalaxyBias.DEFAULTS.alpha);
+                setBiasBetaLow(GalaxyBias.DEFAULTS.betaLow);
+                setBiasRhoLow(GalaxyBias.DEFAULTS.rhoLow);
+                setBiasBetaHigh(GalaxyBias.DEFAULTS.betaHigh);
+                setBiasRhoHigh(GalaxyBias.DEFAULTS.rhoHigh);
+            };
 
             // --- Tutorial State & Refs ---
             const [tutorialStep, setTutorialStep] = useState(0);
@@ -731,6 +753,10 @@ https://github.com/nicosmo/cosmic_web_explorer
             const webDataRefB = useRef(null);
             const webCalcRefB = useRef({ t: 0 });
             const analysisSpaceKeyRef = useRef(buildAnalysisSpaceKey(spaceMode, rsdLos, rsdAmplitudeSettled));
+
+            // Reusable per-tracer normalised bias weights (colour + histogram).
+            const biasWeightsRef = useRef(null);
+            const biasWeightsRefB = useRef(null);
 
             useEffect(() => {
                 const timer = setTimeout(() => setRsdAmplitudeSettled(rsdAmplitude), 180);
@@ -2379,6 +2405,26 @@ https://github.com/nicosmo/cosmic_web_explorer
                         ctx.restore();
                     }
 
+                    // Bias model: per-tracer weight w = N_loc(ρ)/⟨N_loc⟩. Computed
+                    // once per panel and reused by the colour mapping and by the
+                    // P(k) chart. This is a display/analysis layer only: physics,
+                    // void finding, correlations and web classification keep the
+                    // true DM field.
+                    let biasWeights = null;
+                    if (biasEnabled && biasParams && colorMeanDensity > 0) {
+                        const srcDens = showGas ? colorSmoothedDensities : colorDensities;
+                        if (srcDens && srcDens.length >= tracersPerPanel) {
+                            const bufRef = isB ? biasWeightsRefB : biasWeightsRef;
+                            if (!bufRef.current || bufRef.current.length !== tracersPerPanel) {
+                                bufRef.current = new Float32Array(tracersPerPanel);
+                            }
+                            GalaxyBias.normalizedWeights(
+                                srcDens, colorMeanDensity, tracersPerPanel, biasParams, bufRef.current
+                            );
+                            biasWeights = bufRef.current;
+                        }
+                    }
+
                     if (showTracers && physX) {
                         const { densities, smoothedDensities, crossingAccum: pCrossing, thermalPhases: pThermalPhases } = pLD;
                         const N = tracersPerPanel;
@@ -2440,8 +2486,9 @@ https://github.com/nicosmo/cosmic_web_explorer
                             wbPositions[i*2+1] = py;
 
                             if (showGas) {
-                                const density = colorSmoothedDensities[i] || 1;
-                                const ratio = density / (meanDensity || 1);
+                                const ratio = biasWeights
+                                    ? Math.max(1e-3, biasWeights[i])
+                                    : ((colorSmoothedDensities[i] || 1) / (meanDensity || 1));
 
                                 let colIdx = (Math.pow(ratio, 0.75) * 100) | 0;
                                 if (colIdx >= COLOR_LUT_SIZE) colIdx = COLOR_LUT_SIZE - 1;
@@ -2458,8 +2505,9 @@ https://github.com/nicosmo/cosmic_web_explorer
                                 // Size
                                 wbSizes[i] = Math.max(0.5, dynamicBaseSize / Math.pow(ratio + 0.5, 0.6)) * 4.0; // Scale up for visual match
                             } else {
-                                const density = colorDensities[i] || 1;
-                                const ratio = density / (meanDensity || 1);
+                                const ratio = biasWeights
+                                    ? Math.max(1e-3, biasWeights[i])
+                                    : ((colorDensities[i] || 1) / (meanDensity || 1));
                                 let colIdx = (Math.pow(ratio, 0.75) * 100) | 0;
                                 if (colIdx >= COLOR_LUT_SIZE) colIdx = COLOR_LUT_SIZE - 1;
 
@@ -2672,7 +2720,9 @@ https://github.com/nicosmo/cosmic_web_explorer
                         initMode, panelBoxMpc, panelId: panelIdx,
                         smoothedDensities: colorSmoothedDensities, meanDensity: colorMeanDensity,
                         dict: i18n[lang],
-                        rsdActive: rsdEnabled
+                        rsdActive: rsdEnabled,
+                        bias: { enabled: biasEnabled, params: biasParams },
+                        biasWeights
                     });
 
                     if (showVoids && pVoronoiDataRef.current && pVoronoiDataRef.current.voidResults) {
@@ -2703,7 +2753,7 @@ https://github.com/nicosmo/cosmic_web_explorer
                     cancelled = true;
                     cancelAnimationFrame(animationFrameId);
                 };
-            }, [isPlaying, simDeltaT, omegaM, omegaL, w0, wa, showTracers, showGas, showDensity, showInitialOverlay, rulerActive, sculptActive, trailPercentage, trailMode, initialTracers, centers, tracerForces, tracerForcesB, tracerForces2, tracerForces2B, canvasSize, enableLocalGravity, numCircles, boxSizeMpc, BAO_RADIUS_MPC, BAO_RADIUS_MPC_B, BAO_RADIUS_PX_B, tracersPerPanel, isSidebarCollapsed, renderTrigger, cosmologyLUT, showCorrelation, showVoidProfile, showDensityPDF, showVoronoi, showVoids, voidThreshold, minVoidRadius, voidCenterMode, profileMode, splitScreen, omegaMB, omegaLB, w0B, waB, cosmologyLUTB, cosmoMode, cosmoModeB, initMode, spaceMode, rsdLos, rsdAmplitude, rsdAmplitudeSettled, multiColormap, densityColormap, gasColormap, alptEnabled, alptTable, alptTableB, alptLocalStep, showWeb, webBasis, webHierarchical, webSmoothing, webSmoothingCoarse, webThreshold, webHighlight]);
+            }, [isPlaying, simDeltaT, omegaM, omegaL, w0, wa, showTracers, showGas, showDensity, showInitialOverlay, rulerActive, sculptActive, trailPercentage, trailMode, initialTracers, centers, tracerForces, tracerForcesB, tracerForces2, tracerForces2B, canvasSize, enableLocalGravity, numCircles, boxSizeMpc, BAO_RADIUS_MPC, BAO_RADIUS_MPC_B, BAO_RADIUS_PX_B, tracersPerPanel, isSidebarCollapsed, renderTrigger, cosmologyLUT, showCorrelation, showVoidProfile, showDensityPDF, showVoronoi, showVoids, voidThreshold, minVoidRadius, voidCenterMode, profileMode, splitScreen, omegaMB, omegaLB, w0B, waB, cosmologyLUTB, cosmoMode, cosmoModeB, initMode, spaceMode, rsdLos, rsdAmplitude, rsdAmplitudeSettled, multiColormap, densityColormap, gasColormap, alptEnabled, alptTable, alptTableB, alptLocalStep, showWeb, webBasis, webHierarchical, webSmoothing, webSmoothingCoarse, webThreshold, webHighlight, biasEnabled, biasParams]);
 
             // Localized names for the two original palettes; the rest are proper nouns.
             const colormapLabel = (name) => {
@@ -3964,6 +4014,88 @@ https://github.com/nicosmo/cosmic_web_explorer
                                             )}
                                         </div>
 
+                                    </div>
+                                    )}
+                                </div>
+
+                                {/* BIAS MODEL SECTION (display/analysis layer only) */}
+                                <div className="space-y-3">
+                                    <button
+                                        aria-expanded={secBias}
+                                        onClick={() => setSecBias(!secBias)}
+                                        className="w-full text-left text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 cursor-pointer select-none hover:text-slate-300 transition-colors"
+                                    >
+                                        <ChevronDown size={12} className={`transition-transform duration-200 ${secBias ? '' : '-rotate-90'}`}/> {i18n[lang].secBiasTitle}
+                                    </button>
+                                    {secBias && (
+                                    <div className="space-y-3 p-3 bg-slate-900/60 rounded border border-white/10 animate-in fade-in duration-200">
+                                        <div className="flex items-center justify-between">
+                                            <TooltipWrapper text={i18n[lang].biasHint}>
+                                                <span className="text-[11px] text-slate-400 cursor-help border-b border-dotted border-slate-600">{i18n[lang].biasEnable}</span>
+                                            </TooltipWrapper>
+                                            <label className="toggle-switch scale-[0.6] origin-right">
+                                                <input
+                                                    aria-label={i18n[lang].biasEnable}
+                                                    type="checkbox"
+                                                    checked={biasEnabled}
+                                                    onChange={e => setBiasEnabled(e.target.checked)}
+                                                />
+                                                <span className="slider"></span>
+                                            </label>
+                                        </div>
+                                        <p className="text-[10px] text-slate-400 font-mono leading-tight">
+                                            N<sub>loc</sub>(ρ) = ρ<sup>α</sup> σ(β<sub>l</sub>(ρ−ρ<sub>l</sub>)) σ(−β<sub>h</sub>(ρ−ρ<sub>h</sub>))
+                                        </p>
+                                        <p className="text-[10px] text-slate-500 leading-tight">{i18n[lang].biasHint}</p>
+
+                                        {biasEnabled && (<>
+                                            {[
+                                                { key: 'alpha', label: i18n[lang].biasAlpha, value: biasAlpha, set: setBiasAlpha, r: GalaxyBias.RANGES.alpha, digits: 2 },
+                                                { key: 'betaLow', label: i18n[lang].biasBetaLow, value: biasBetaLow, set: setBiasBetaLow, r: GalaxyBias.RANGES.betaLow, digits: 2 },
+                                                { key: 'rhoLow', label: i18n[lang].biasRhoLow, value: biasRhoLow, set: setBiasRhoLow, r: GalaxyBias.RANGES.rhoLow, digits: 2 },
+                                                { key: 'betaHigh', label: i18n[lang].biasBetaHigh, value: biasBetaHigh, set: setBiasBetaHigh, r: GalaxyBias.RANGES.betaHigh, digits: 2 },
+                                                { key: 'rhoHigh', label: i18n[lang].biasRhoHigh, value: biasRhoHigh, set: setBiasRhoHigh, r: GalaxyBias.RANGES.rhoHigh, digits: 1 }
+                                            ].map(s => {
+                                                // Log-scaled sliders (rho_high) are driven by a
+                                                // 0..1 position and mapped back exponentially.
+                                                const log = !!s.r.log;
+                                                const sliderMin = log ? 0 : s.r.min;
+                                                const sliderMax = log ? 1 : s.r.max;
+                                                const sliderStep = log ? 0.001 : s.r.step;
+                                                const sliderValue = log ? GalaxyBias.toSlider(s.r, s.value) : s.value;
+                                                const shown = (log && s.value < 10)
+                                                    ? s.value.toFixed(2)
+                                                    : s.value.toFixed(s.digits);
+                                                return (
+                                                <div key={s.key} className="space-y-1">
+                                                    <div className="flex justify-between text-xs">
+                                                        <span className="text-slate-400">{s.label}</span>
+                                                        <span className="text-slate-200">{shown}</span>
+                                                    </div>
+                                                    <input
+                                                        aria-label={s.label}
+                                                        aria-valuetext={shown}
+                                                        type="range"
+                                                        min={sliderMin}
+                                                        max={sliderMax}
+                                                        step={sliderStep}
+                                                        value={sliderValue}
+                                                        onChange={e => {
+                                                            const raw = parseFloat(e.target.value);
+                                                            s.set(log ? GalaxyBias.fromSlider(s.r, raw) : raw);
+                                                        }}
+                                                        className="w-full accent-amber-500"
+                                                    />
+                                                </div>
+                                                );
+                                            })}
+                                            <button
+                                                onClick={resetBias}
+                                                className="w-full py-1.5 rounded text-[11px] bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200 transition-colors"
+                                            >
+                                                {i18n[lang].biasReset}
+                                            </button>
+                                        </>)}
                                     </div>
                                     )}
                                 </div>

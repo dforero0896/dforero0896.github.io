@@ -1018,15 +1018,21 @@ function _fft_any(re, im, n, invert) {
     }
 }
 
-// Throttle/cache for P(k) computation (expensive FFT) — per-panel
-const _pkCaches = {};   // keyed by panelId
+// Throttle/cache for P(k) computation (expensive FFT) — per-panel, plus a
+// separate slot for the bias-weighted spectrum ("<panel>:bias").
+const _pkCaches = {};   // keyed by panelId (or "panelId:bias")
 const _pkCacheTimes = {};
 const _PK_THROTTLE_MS = 500;
 
-function computePowerSpectrum(physX, physY, N, SIM_W, SIM_H, pxPerMpc, panelId) {
+function computePowerSpectrum(physX, physY, N, SIM_W, SIM_H, pxPerMpc, panelId, weights) {
     panelId = panelId || 0;
+    // The unweighted (DM) and bias-weighted spectra have their own cache slots
+    // so the two curves can be requested in the same frame.
+    const cacheKey = weights ? panelId + ':bias' : String(panelId);
     const now = performance.now();
-    if (_pkCaches[panelId] && (now - _pkCacheTimes[panelId]) < _PK_THROTTLE_MS) return _pkCaches[panelId];
+    if (_pkCaches[cacheKey] && (now - _pkCacheTimes[cacheKey]) < _PK_THROTTLE_MS) {
+        return _pkCaches[cacheKey];
+    }
 
     // Grid: cells are exactly square in pixel space.
     // Longer axis gets maxCells; shorter axis scales proportionally (any integer).
@@ -1053,9 +1059,18 @@ function computePowerSpectrum(physX, physY, N, SIM_W, SIM_H, pxPerMpc, panelId) 
     const grid2 = new Float64Array(NX * NY);
     const cellWPx = SIM_W / NX;
     const cellHPx = SIM_H / NY;
-    const meanDensity = N / (NX * NY);
+    // With weights the "mass" per tracer is its bias weight, so the mean used
+    // to build the overdensity is the mean deposited weight, not N/cells.
+    let totalWeight = N;
+    if (weights) {
+        totalWeight = 0;
+        for (let i = 0; i < N; i++) totalWeight += weights[i];
+        if (!(totalWeight > 0)) totalWeight = N;
+    }
+    const meanDensity = totalWeight / (NX * NY);
 
     for (let i = 0; i < N; i++) {
+        const w = weights ? weights[i] : 1;
         // First grid (standard)
         const gx1 = physX[i] / cellWPx - 0.5;
         const gy1 = physY[i] / cellHPx - 0.5;
@@ -1069,10 +1084,10 @@ function computePowerSpectrum(physX, physY, N, SIM_W, SIM_H, pxPerMpc, panelId) 
         const ix1_1 = (ix1_0 + 1) % NX;
         const iy1_1 = (iy1_0 + 1) % NY;
 
-        grid1[iy1_0 * NX + ix1_0] += (1 - dx1) * (1 - dy1);
-        grid1[iy1_0 * NX + ix1_1] += dx1 * (1 - dy1);
-        grid1[iy1_1 * NX + ix1_0] += (1 - dx1) * dy1;
-        grid1[iy1_1 * NX + ix1_1] += dx1 * dy1;
+        grid1[iy1_0 * NX + ix1_0] += w * (1 - dx1) * (1 - dy1);
+        grid1[iy1_0 * NX + ix1_1] += w * dx1 * (1 - dy1);
+        grid1[iy1_1 * NX + ix1_0] += w * (1 - dx1) * dy1;
+        grid1[iy1_1 * NX + ix1_1] += w * dx1 * dy1;
 
         // Second grid (shifted by 0.5 cells)
         const gx2 = gx1 + 0.5;
@@ -1087,10 +1102,10 @@ function computePowerSpectrum(physX, physY, N, SIM_W, SIM_H, pxPerMpc, panelId) 
         const ix2_1 = (ix2_0 + 1) % NX;
         const iy2_1 = (iy2_0 + 1) % NY;
 
-        grid2[iy2_0 * NX + ix2_0] += (1 - dx2) * (1 - dy2);
-        grid2[iy2_0 * NX + ix2_1] += dx2 * (1 - dy2);
-        grid2[iy2_1 * NX + ix2_0] += (1 - dx2) * dy2;
-        grid2[iy2_1 * NX + ix2_1] += dx2 * dy2;
+        grid2[iy2_0 * NX + ix2_0] += w * (1 - dx2) * (1 - dy2);
+        grid2[iy2_0 * NX + ix2_1] += w * dx2 * (1 - dy2);
+        grid2[iy2_1 * NX + ix2_0] += w * (1 - dx2) * dy2;
+        grid2[iy2_1 * NX + ix2_1] += w * dx2 * dy2;
     }
 
     // Convert to overdensity δ = ρ/ρ̄ - 1
@@ -1216,8 +1231,8 @@ function computePowerSpectrum(physX, physY, N, SIM_W, SIM_H, pxPerMpc, panelId) 
     }
 
     const result = { kBins, pkBins, numBins, kMin, kMax };
-    _pkCaches[panelId] = result;
-    _pkCacheTimes[panelId] = performance.now();
+    _pkCaches[cacheKey] = result;
+    _pkCacheTimes[cacheKey] = performance.now();
     return result;
 }
 
@@ -1227,11 +1242,495 @@ function computePowerSpectrum(physX, physY, N, SIM_W, SIM_H, pxPerMpc, panelId) 
  *   - BAO mode + correlation: 2-Pt Correlation Function ξ(r)
  *   - Void profile: stacked/median density profile
  */
+// ============================================================
+// Density PDF: DM histogram + optional bias-weighted histogram
+// ============================================================
+// The two distributions are drawn as stacked panels with independent axis
+// scaling.  A shared x-axis would be dominated by the bias model's tail as
+// soon as rho^alpha or the high-density cutoff kicks in, which would flatten
+// the DM histogram.  Keeping the panels separate lets both keep their shape.
+// ============================================================
+
+const _densityPDFCaches = new Map();
+
+function _densityPDFCache(panelId, N) {
+    const key = panelId || 0;
+    let c = _densityPDFCaches.get(key);
+    if (!c || c.size !== N) {
+        c = {
+            size: N,
+            weights: new Float32Array(N),
+            sample: new Float64Array(Math.min(N, 4096))
+        };
+        _densityPDFCaches.set(key, c);
+    }
+    return c;
+}
+
+// Robust upper percentile from a strided sample (sorting the full field every
+// frame would be far too expensive at 50k+ tracers).
+function _densityPDFPercentile(arr, N, frac, scratch) {
+    if (!arr || !(N > 0) || !scratch || scratch.length === 0) return 0;
+    const M = Math.min(N, scratch.length);
+    const stride = Math.max(1, Math.floor(N / M));
+    let k = 0;
+    for (let i = 0; i < N && k < M; i += stride) scratch[k++] = arr[i];
+    if (k === 0) return 0;
+    const view = scratch.subarray(0, k);
+    view.sort();
+    const idx = Math.min(k - 1, Math.max(0, Math.floor(frac * (k - 1))));
+    return view[idx];
+}
+
+// "Nice" tick spacing that stays well behaved for any dynamic range.
+function _densityPDFNiceStep(range, targetTicks) {
+    if (!(range > 0) || !isFinite(range)) return 1;
+    const raw = range / Math.max(1, targetTicks);
+    const pow = Math.pow(10, Math.floor(Math.log10(raw)));
+    const norm = raw / pow;
+    let mult;
+    if (norm <= 1) mult = 1;
+    else if (norm <= 2) mult = 2;
+    else if (norm <= 5) mult = 5;
+    else mult = 10;
+    return mult * pow;
+}
+
+function _formatDensityTick(v) {
+    const a = Math.abs(v);
+    if (a !== 0 && (a >= 1e4 || a < 1e-3)) return v.toExponential(1);
+    if (Number.isInteger(v)) return String(v);
+    return v.toFixed(a < 10 ? 1 : 0);
+}
+
+// Draw one histogram panel (background, bars, reference line, axes, title).
+function _drawDensityPDFPanel(ctx, cfg) {
+    const {
+        counts, numBins, xMin, xMax, histMax,
+        plotX, plotY, plotW, plotH,
+        title, xLabel, zeroFrac, zeroLabel, barColor, logCounts,
+        xTicks, xTickFormat
+    } = cfg;
+
+    const mL = 12, mR = 12, mT = 28, mB = 32;
+    const areaW = plotW - mL - mR;
+    const areaH = plotH - mT - mB;
+    const areaX = plotX + mL;
+    const areaY = plotY + mT;
+
+    // Background
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+    ctx.fillRect(plotX, plotY, plotW, plotH);
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+    ctx.strokeRect(plotX, plotY, plotW, plotH);
+
+    // Bars (contiguous, no gap).  When logCounts is set the bar height is
+    // proportional to log10(count), so rare bins stay visible next to a peak
+    // that can be orders of magnitude taller.
+    const barW = areaW / numBins;
+    const logDen = (logCounts && histMax > 1) ? Math.log10(histMax) : 0;
+    for (let b = 0; b < numBins; b++) {
+        const c = counts[b];
+        if (c === 0) continue;
+        let frac;
+        if (logCounts) {
+            frac = logDen > 0 ? Math.log10(c) / logDen : 1;
+            if (frac < 0) frac = 0;
+        } else {
+            frac = c / histMax;
+        }
+        let barH = frac * areaH;
+        // A single-tracer bin has log10(1) = 0 height; keep a visible sliver
+        // so the sparse tail is still readable.
+        if (logCounts && barH < 1.5) barH = 1.5;
+        const bx = Math.round(areaX + b * barW);
+        const bxNext = Math.round(areaX + (b + 1) * barW);
+        const by = areaY + areaH - barH;
+        const alpha = 0.45 + frac * 0.45;
+        ctx.fillStyle = `rgba(${barColor}, ${alpha})`;
+        ctx.fillRect(bx, by, bxNext - bx, barH);
+    }
+
+    // Log-count gridlines: decades of tracer counts, labelled inside the plot
+    // so the left margin can stay narrow.
+    if (logCounts && logDen > 0) {
+        ctx.font = '8px Inter';
+        ctx.textAlign = 'left';
+        ctx.lineWidth = 1;
+        for (let e = 0; e <= Math.floor(logDen); e++) {
+            const gy = areaY + areaH - (e / logDen) * areaH;
+            ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+            ctx.beginPath();
+            ctx.moveTo(areaX, gy);
+            ctx.lineTo(areaX + areaW, gy);
+            ctx.stroke();
+            ctx.fillStyle = 'rgba(148,163,184,0.75)';
+            const n = Math.pow(10, e);
+            ctx.fillText(n < 1e4 ? String(n) : '1e' + e, areaX + 2, gy - 2);
+        }
+        ctx.fillStyle = 'rgba(148,163,184,0.75)';
+        ctx.textAlign = 'left';
+        ctx.fillText('log N', plotX + 6, plotY + 18);
+    }
+
+    // Reference line at the mean field value (δ = 0)
+    if (zeroFrac > 0 && zeroFrac < 1) {
+        const zeroX = areaX + zeroFrac * areaW;
+        ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+        ctx.setLineDash([4, 4]);
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(zeroX, areaY);
+        ctx.lineTo(zeroX, areaY + areaH);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#e2e8f0';
+        ctx.font = 'bold 13px Inter';
+        ctx.textAlign = 'center';
+        ctx.fillText(zeroLabel, zeroX, areaY - 4);
+    }
+
+    // X axis ticks.  A log x axis supplies its own decade positions (and no
+    // "-1" edge tick, which only makes sense for the contrast axis).
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Inter';
+    ctx.textAlign = 'center';
+    ctx.lineWidth = 1;
+    if (xTicks) {
+        const xRangeT = xMax - xMin;
+        for (let t = 0; t < xTicks.length; t++) {
+            const v = xTicks[t];
+            const frac = (v - xMin) / xRangeT;
+            if (frac < -1e-9 || frac > 1 + 1e-9) continue;
+            const tx = areaX + frac * areaW;
+            ctx.beginPath();
+            ctx.moveTo(tx, areaY + areaH);
+            ctx.lineTo(tx, areaY + areaH + 4);
+            ctx.stroke();
+            ctx.fillStyle = '#94a3b8';
+            ctx.fillText(xTickFormat ? xTickFormat(v) : _formatDensityTick(v), tx, areaY + areaH + 14);
+        }
+    } else {
+        ctx.beginPath();
+        ctx.moveTo(areaX, areaY + areaH);
+        ctx.lineTo(areaX, areaY + areaH + 4);
+        ctx.stroke();
+        ctx.fillText('-1', areaX, areaY + areaH + 14);
+
+        const xRange = xMax - xMin;
+        const tickStep = _densityPDFNiceStep(xRange, 6);
+        const tickStart = Math.ceil((xMin + 1e-9) / tickStep) * tickStep;
+        for (let v = tickStart; v <= xMax + 1e-9; v += tickStep) {
+            const frac = (v - xMin) / xRange;
+            if (frac <= 0 || frac > 1) continue;
+            const tx = areaX + frac * areaW;
+            ctx.beginPath();
+            ctx.moveTo(tx, areaY + areaH);
+            ctx.lineTo(tx, areaY + areaH + 4);
+            ctx.stroke();
+            if (Math.abs(v) > tickStep * 0.1) {
+                ctx.fillStyle = '#94a3b8';
+                ctx.fillText(_formatDensityTick(v), tx, areaY + areaH + 14);
+            }
+        }
+    }
+
+    // X-axis label
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 14px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText(xLabel, areaX + areaW / 2, areaY + areaH + 28);
+
+    // Title
+    ctx.font = 'bold 14px Inter';
+    ctx.textAlign = 'right';
+    ctx.fillText(title, plotX + plotW - 5, plotY + 18);
+}
+
+// Draw the bias-curve panel: the model N_loc(rho) itself, sampled over a
+// log-spaced rho axis, with the two sigmoid pivots marked.  The y axis is
+// logarithmic and referenced to the curve maximum so the shape stays visible
+// for any alpha.
+function _drawBiasCurvePanel(ctx, cfg) {
+    const { plotX, plotY, plotW, plotH, params, dict } = cfg;
+    const d = dict || {};
+    if (!params) return;
+
+    const mL = 34, mR = 12, mT = 20, mB = 26;
+    const areaW = plotW - mL - mR;
+    const areaH = plotH - mT - mB;
+    const areaX = plotX + mL;
+    const areaY = plotY + mT;
+
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+    ctx.fillRect(plotX, plotY, plotW, plotH);
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+    ctx.strokeRect(plotX, plotY, plotW, plotH);
+
+    // rho axis: wide enough to contain the high-density cut-off.
+    const rhoMin = 0.02;
+    let rhoMax = Math.max(3 * Math.max(params.rhoHigh, 1), 3);
+    if (rhoMax > 1e3) rhoMax = 1e3;
+    const logMin = Math.log10(rhoMin);
+    const logMax = Math.log10(rhoMax);
+    const logRange = logMax - logMin || 1;
+
+    const NS = 200;
+    const wVals = new Float32Array(NS);
+    let wMax = 0;
+    for (let i = 0; i < NS; i++) {
+        const rho = Math.pow(10, logMin + logRange * (i / (NS - 1)));
+        const w = GalaxyBias.weight(rho, params);
+        const wv = isFinite(w) && w > 0 ? w : 0;
+        wVals[i] = wv;
+        if (wv > wMax) wMax = wv;
+    }
+    if (!(wMax > 0)) return;
+
+    // y axis spans three decades below the curve maximum.
+    const yMinLog = -3;
+    const toX = (rho) => areaX + ((Math.log10(rho) - logMin) / logRange) * areaW;
+    const toY = (w) => {
+        if (!(w > 0)) return areaY + areaH;
+        let ly = Math.log10(w / wMax);
+        if (ly < yMinLog) ly = yMinLog;
+        return areaY + areaH * (Math.abs(ly) / -yMinLog);
+    };
+
+    // Horizontal gridlines / y tick labels (log10 of the normalised curve).
+    ctx.font = '9px Inter';
+    ctx.textAlign = 'right';
+    for (let ly = 0; ly >= yMinLog; ly--) {
+        const gy = areaY + areaH * (Math.abs(ly) / -yMinLog);
+        ctx.strokeStyle = ly === 0 ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.07)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(areaX, gy);
+        ctx.lineTo(areaX + areaW, gy);
+        ctx.stroke();
+        ctx.fillStyle = '#64748b';
+        ctx.fillText(String(ly), areaX - 5, gy + 3);
+    }
+
+    // Vertical decade gridlines / x tick labels.
+    ctx.textAlign = 'center';
+    for (let dec = Math.ceil(logMin); dec <= Math.floor(logMax); dec++) {
+        const rho = Math.pow(10, dec);
+        const gx = toX(rho);
+        ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+        ctx.beginPath();
+        ctx.moveTo(gx, areaY);
+        ctx.lineTo(gx, areaY + areaH);
+        ctx.stroke();
+        ctx.fillStyle = '#94a3b8';
+        const label = rho >= 1 ? String(rho) : rho.toFixed(-dec);
+        ctx.fillText(label, gx, areaY + areaH + 11);
+    }
+
+    // The curve itself.
+    ctx.strokeStyle = 'rgba(251, 191, 36, 0.95)';
+    ctx.lineWidth = 1.75;
+    ctx.beginPath();
+    for (let i = 0; i < NS; i++) {
+        const rho = Math.pow(10, logMin + logRange * (i / (NS - 1)));
+        const px = toX(rho);
+        const py = toY(wVals[i]);
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    // Pivot markers (rho_l rose, rho_h amber).
+    const markers = [
+        { rho: params.rhoLow, color: 'rgba(244, 114, 182, 0.8)', label: 'ρl' },
+        { rho: params.rhoHigh, color: 'rgba(251, 191, 36, 0.8)', label: 'ρh' }
+    ];
+    ctx.font = '9px Inter';
+    for (const m of markers) {
+        if (!(m.rho > rhoMin) || !(m.rho < rhoMax)) continue;
+        const mx = toX(m.rho);
+        ctx.strokeStyle = m.color;
+        ctx.setLineDash([3, 3]);
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(mx, areaY);
+        ctx.lineTo(mx, areaY + areaH);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = m.color;
+        ctx.textAlign = mx > areaX + areaW - 24 ? 'right' : 'left';
+        ctx.fillText(m.label, mx + (mx > areaX + areaW - 24 ? -2 : 2), areaY + 9);
+    }
+
+    // Axis titles.
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '9px Inter';
+    ctx.textAlign = 'left';
+    ctx.fillText('log N_loc', plotX + 4, plotY + 13);
+    ctx.textAlign = 'center';
+    ctx.fillText(d.biasCurveXLabel || 'ρ = ρ_DM / ⟨ρ_DM⟩', areaX + areaW / 2, plotY + plotH - 3);
+
+    // Title.
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 13px Inter';
+    ctx.textAlign = 'right';
+    ctx.fillText(d.biasCurveTitle || 'Bias curve', plotX + plotW - 6, plotY + 13);
+}
+
+/**
+ * Draw the density PDF chart (one panel, or two stacked when bias is on).
+ * opts = { smoothedDensities, meanDensity, tracersPerPanel, SIM_W, SIM_H,
+ *          dict, rsdActive, bias: { enabled, params }, panelId }
+ */
+function drawDensityPDF(ctx, opts) {
+    const { smoothedDensities, meanDensity, tracersPerPanel, SIM_W, SIM_H,
+            dict, rsdActive, bias, panelId } = opts;
+    const d = dict || {};
+    if (!smoothedDensities || !meanDensity || meanDensity <= 0) return;
+    const N = tracersPerPanel;
+    if (!(N > 0)) return;
+
+    const biasOn = !!(bias && bias.enabled && bias.params);
+    const plotW = 390;
+    const plotH = 160;
+    const curveH = 104;
+    const gap = 8;
+    const plotX = SIM_W - plotW - 20;
+    const bottomY = SIM_H - plotH - 60;                        // bias histogram (or DM)
+    const topY = biasOn ? bottomY - plotH - gap : bottomY;     // DM histogram
+    const curveY = biasOn ? topY - curveH - gap : 0;           // bias curve
+
+    // ---- Bias curve: the model itself, drawn above both histograms ----
+    if (biasOn) {
+        _drawBiasCurvePanel(ctx, {
+            plotX, plotY: curveY, plotW, plotH: curveH,
+            params: bias.params, dict: d
+        });
+    }
+
+    // ---- DM density histogram ----
+    let deltaMax = -Infinity;
+    for (let i = 0; i < N; i++) {
+        const v = (smoothedDensities[i] / meanDensity) - 1;
+        if (v > deltaMax) deltaMax = v;
+    }
+
+    const xMin = -1;
+    const targetMax = Math.max(2, (isFinite(deltaMax) ? deltaMax : 0) * 1.05);
+
+    // Bin width is an integer multiple of the discrete grid quantum so the
+    // bars stay aligned with the actual density values.
+    const quantum = 1.0 / meanDensity;
+    const targetStepSize = 0.2;
+    const multiplier = Math.max(1, Math.round(targetStepSize / quantum));
+    const binWidth = quantum * multiplier;
+
+    let numBins = Math.ceil((targetMax - xMin) / binWidth);
+    if (!isFinite(numBins) || numBins < 4) numBins = 4;
+    // Cap the bar count: a very long tail would otherwise produce tens of
+    // thousands of invisible slivers.
+    if (numBins > 512) numBins = 512;
+    const xMax = xMin + numBins * binWidth;
+
+    const counts = new Float32Array(numBins);
+    for (let i = 0; i < N; i++) {
+        const v = (smoothedDensities[i] / meanDensity) - 1;
+        let b = Math.floor((v - xMin) / binWidth);
+        if (b < 0) b = 0;
+        if (b >= numBins) b = numBins - 1;
+        counts[b]++;
+    }
+
+    let histMax = 0;
+    for (let b = 0; b < numBins; b++) if (counts[b] > histMax) histMax = counts[b];
+    if (histMax === 0) return;
+
+    _drawDensityPDFPanel(ctx, {
+        counts, numBins, xMin, xMax, histMax,
+        plotX, plotY: topY, plotW, plotH,
+        title: rsdActive ? (d.normDensityDistRsd || d.normDensityDist) : d.normDensityDist,
+        xLabel: d.densityContrastLabel,
+        zeroFrac: (0 - xMin) / (xMax - xMin),
+        zeroLabel: d.meanDensitySymbol || 'ρ̅',
+        barColor: '52, 211, 153'
+    });
+
+    if (!biasOn) return;
+
+    // ---- Bias-weighted (normalised galaxy) histogram ----
+    // The normalised weights are ratios N / <N>, which are strictly positive,
+    // so the x axis is log10(N / <N>) and never has to deal with the zero or
+    // negative values that the contrast (N/<N> - 1) produces in underdense
+    // regions.
+    const cache = _densityPDFCache(panelId, N);
+    GalaxyBias.normalizedWeights(smoothedDensities, meanDensity, N, bias.params, cache.weights);
+
+    const RHO_FLOOR = 1e-4;
+    let rhoLo = Infinity, rhoHi = 0;
+    for (let i = 0; i < N; i++) {
+        const r = cache.weights[i];
+        if (!(r > 0)) continue;
+        if (r < rhoLo) rhoLo = r;
+        if (r > rhoHi) rhoHi = r;
+    }
+    if (!(rhoHi > 0)) return;
+
+    // The top 0.1% is capped so a single extreme tracer cannot stretch the
+    // axis by decades; the top bin absorbs the overflow.
+    const p999 = _densityPDFPercentile(cache.weights, N, 0.999, cache.sample);
+    const hiRho = Math.min(rhoHi, (isFinite(p999) && p999 > 0) ? p999 : rhoHi);
+
+    // Decade-aligned range: whole powers of ten, at least one decade wide.
+    let xMinLog = Math.max(Math.floor(Math.log10(Math.max(rhoLo, RHO_FLOOR))), -4);
+    let xMaxLog = Math.ceil(Math.log10(Math.max(hiRho, 1e-3)));
+    if (xMaxLog - xMinLog < 1) xMaxLog = xMinLog + 1;
+
+    const bNumBins = 80;
+    const bBinWidth = (xMaxLog - xMinLog) / bNumBins;
+    const bCounts = new Float32Array(bNumBins);
+    for (let i = 0; i < N; i++) {
+        const r = cache.weights[i];
+        const v = Math.log10(r > 0 ? r : RHO_FLOOR);
+        let b = Math.floor((v - xMinLog) / bBinWidth);
+        if (b < 0) b = 0;
+        if (b >= bNumBins) b = bNumBins - 1;
+        bCounts[b]++;
+    }
+
+    let bHistMax = 0;
+    for (let b = 0; b < bNumBins; b++) if (bCounts[b] > bHistMax) bHistMax = bCounts[b];
+    if (bHistMax === 0) return;
+
+    // Decade ticks, thinned so at most ~7 labels are drawn.
+    const decades = Math.round(xMaxLog - xMinLog);
+    const stride = decades > 6 ? Math.ceil(decades / 6) : 1;
+    const xticks = [];
+    for (let e = xMinLog; e <= xMaxLog; e += stride) xticks.push(e);
+
+    _drawDensityPDFPanel(ctx, {
+        counts: bCounts, numBins: bNumBins, xMin: xMinLog, xMax: xMaxLog, histMax: bHistMax,
+        plotX, plotY: bottomY, plotW, plotH,
+        title: d.biasDensityDist || 'Bias-weighted density distribution',
+        xLabel: d.biasRatioLabel || 'log₁₀ (N / ⟨N⟩)',
+        zeroFrac: (0 - xMinLog) / (xMaxLog - xMinLog),
+        zeroLabel: d.biasMeanSymbol || '⟨N_gal⟩',
+        barColor: '251, 191, 36',
+        logCounts: true,
+        xTicks: xticks,
+        xTickFormat: (v) => {
+            if (v >= 0 && v <= 3) return String(Math.pow(10, v));
+            if (v < 0 && v >= -3) return Math.pow(10, v).toFixed(-v);
+            return '1e' + v;
+        }
+    });
+}
+
 function drawStatsChart(ctx, opts) {
     const { showCorrelation, showVoidProfile, showDensityPDF, physX, physY, tracersPerPanel,
             centers, pBaoRadiusPx, pBaoRadiusMpc, pxPerMpc, SIM_W, SIM_H,
             voronoiData, voidCenterMode, profileMode, gpuCorrHistogram, gpuCorrNCenters,
-            initMode, panelBoxMpc, panelId, smoothedDensities, meanDensity, dict, rsdActive } = opts;
+            initMode, panelBoxMpc, panelId, smoothedDensities, meanDensity, dict, rsdActive,
+            bias, biasWeights } = opts;
     const d = dict || {};
 
     if (!showCorrelation && !showVoidProfile && !showDensityPDF) return;
@@ -1239,160 +1738,10 @@ function drawStatsChart(ctx, opts) {
 
     // ========== Density histogram (self-contained, early-return) ==========
     if (showDensityPDF) {
-        if (!smoothedDensities || !meanDensity || meanDensity <= 0) return;
-
-        // Compute density contrast δ = ρ/ρ̅ − 1 for each tracer
-        const N = tracersPerPanel;
-        let deltaMin = Infinity, deltaMax = -Infinity;
-        for (let i = 0; i < N; i++) {
-            const d = (smoothedDensities[i] / meanDensity) - 1;
-            if (d < deltaMin) deltaMin = d;
-            if (d > deltaMax) deltaMax = d;
-        }
-
-        // Dynamic x-axis: always starts at -1, upper bound is max(2, δ_max * 1.05)
-        // Dynamic x-axis: always starts at -1, upper bound is at least 2
-        const xMin = -1;
-        let targetMax = Math.max(2, deltaMax * 1.05);
-
-        // 1. Calculate the fundamental discrete step size of your density grid
-        const quantum = 1.0 / meanDensity;
-
-        // 2. Define your ideal step size in delta
-        const targetStepSize = 0.2;
-
-        // 3. Find the exact integer multiple of 'quantum' that is closest to 0.1
-        let multiplier = Math.max(1, Math.round(targetStepSize / quantum));
-
-        // 4. Set the final anti-aliased bin width
-        const binWidth = quantum * multiplier;
-        const numBins = Math.ceil((targetMax - xMin) / binWidth);
-
-        // 5. Adjust xMax so the axis perfectly aligns
-        const xMax = xMin + numBins * binWidth;
-
-        const histCounts = new Float32Array(numBins);
-
-        for (let i = 0; i < N; i++) {
-            const d = (smoothedDensities[i] / meanDensity) - 1;
-            let b = Math.floor((d - xMin) / binWidth);
-            if (b < 0) b = 0;
-            if (b >= numBins) b = numBins - 1;
-            histCounts[b]++;
-        }
-
-        // Find max count for normalization
-        let histMax = 0;
-        for (let b = 0; b < numBins; b++) {
-            if (histCounts[b] > histMax) histMax = histCounts[b];
-        }
-        if (histMax === 0) return;
-
-        // Chart dimensions (same as other charts)
-        const plotW = 390;
-        const plotH = 210;
-        const plotX = SIM_W - plotW - 20;
-        const plotY = SIM_H - plotH - 60;
-
-        // Margins inside chart box
-        const mL = 12, mR = 12, mT = 28, mB = 32;
-        const areaW = plotW - mL - mR;
-        const areaH = plotH - mT - mB;
-        const areaX = plotX + mL;
-        const areaY = plotY + mT;
-
-        // Background
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
-        ctx.fillRect(plotX, plotY, plotW, plotH);
-        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-        ctx.strokeRect(plotX, plotY, plotW, plotH);
-
-        // Draw bars (no gap between bars for a clean, contiguous look)
-        const barW = areaW / numBins;
-        for (let b = 0; b < numBins; b++) {
-            if (histCounts[b] === 0) continue;
-            const frac = histCounts[b] / histMax;
-            const barH = frac * areaH;
-            const bx = Math.round(areaX + b * barW);
-            const bxNext = Math.round(areaX + (b + 1) * barW);
-            const by = areaY + areaH - barH;
-
-            // Color: teal gradient based on bar height
-            const alpha = 0.45 + frac * 0.45;
-            ctx.fillStyle = `rgba(52, 211, 153, ${alpha})`;
-            ctx.fillRect(bx, by, bxNext - bx, barH);
-        }
-
-        // δ = 0 reference line (ρ = ρ̅)
-        const zeroFrac = (0 - xMin) / (xMax - xMin);
-        if (zeroFrac > 0 && zeroFrac < 1) {
-            const zeroX = areaX + zeroFrac * areaW;
-            ctx.strokeStyle = 'rgba(255,255,255,0.35)';
-            ctx.setLineDash([4, 4]);
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(zeroX, areaY);
-            ctx.lineTo(zeroX, areaY + areaH);
-            ctx.stroke();
-            ctx.setLineDash([]);
-            // Label
-            ctx.fillStyle = '#e2e8f0';
-            ctx.font = 'bold 13px Inter';
-            ctx.textAlign = 'center';
-            ctx.fillText(d.meanDensitySymbol || 'ρ̅', zeroX, areaY - 4);
-        }
-
-        // X-axis tick marks and labels
-        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = '11px Inter';
-        ctx.textAlign = 'center';
-        ctx.lineWidth = 1;
-
-        // ALWAYS draw the -1 tick and label at the very beginning
-        ctx.beginPath();
-        ctx.moveTo(areaX, areaY + areaH);
-        ctx.lineTo(areaX, areaY + areaH + 4);
-        ctx.stroke();
-        ctx.fillText(d.minusOneTick || '-1', areaX, areaY + areaH + 14);
-
-        // Determine tick step based on range
-        const xRange = xMax - xMin;
-        let tickStep = 1;
-        if (xRange > 20) tickStep = 5;
-        else if (xRange > 10) tickStep = 2;
-        else if (xRange > 4) tickStep = 1;
-        else tickStep = 0.5;
-
-        const tickStart = Math.ceil(xMin / tickStep) * tickStep;
-        for (let v = tickStart; v <= xMax; v += tickStep) {
-            const frac = (v - xMin) / (xMax - xMin);
-            if (frac < 0 || frac > 1) continue;
-            const tx = areaX + frac * areaW;
-            ctx.beginPath();
-            ctx.moveTo(tx, areaY + areaH);
-            ctx.lineTo(tx, areaY + areaH + 4);
-            ctx.stroke();
-            // Skip label at 0 (already has ρ̅ label)
-            if (Math.abs(v) > tickStep * 0.1) {
-                ctx.fillStyle = '#94a3b8';
-                const label = Number.isInteger(v) ? String(v) : v.toFixed(1);
-                ctx.fillText(label, tx, areaY + areaH + 14);
-            }
-        }
-
-        // X-axis label
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = 'bold 14px Inter';
-        ctx.textAlign = 'center';
-        ctx.fillText(d.densityContrastLabel, areaX + areaW / 2, areaY + areaH + 28);
-
-        // Title
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = 'bold 14px Inter';
-        ctx.textAlign = 'right';
-        ctx.fillText(rsdActive ? (d.normDensityDistRsd || d.normDensityDist) : d.normDensityDist, plotX + plotW - 5, plotY + 18);
-
+        drawDensityPDF(ctx, {
+            smoothedDensities, meanDensity, tracersPerPanel,
+            SIM_W, SIM_H, dict: d, rsdActive, bias, panelId
+        });
         return;
     }
 
@@ -1449,10 +1798,16 @@ function drawStatsChart(ctx, opts) {
     // Extra state for P(k) power spectrum log-log chart
     let isPkChart = false;
     let pkData = null;
+    let pkBiasData = null;
 
     if (showCorrelation && isPkMode) {
         // --- P(k) mode: Measured Power Spectrum via FFT ---
+        // The true DM spectrum is always computed: it is the reference curve
+        // that stays put while the bias sliders reshape the second curve.
         pkData = computePowerSpectrum(physX, physY, tracersPerPanel, SIM_W, SIM_H, pxPerMpc, panelId);
+        if (bias && bias.enabled && biasWeights) {
+            pkBiasData = computePowerSpectrum(physX, physY, tracersPerPanel, SIM_W, SIM_H, pxPerMpc, panelId, biasWeights);
+        }
         isPkChart = true;
         title = rsdActive ? (d.powerSpectrumRsd || d.powerSpectrum) : d.powerSpectrum;
     } else if (showCorrelation) {
@@ -1665,26 +2020,37 @@ function drawStatsChart(ctx, opts) {
 
     // ========== P(k) log-log chart ==========
     if (isPkChart && pkData && pkData.numBins > 0) {
-        const { kBins, pkBins, numBins: nBins } = pkData;
-
-        // Collect valid bins (positive k and P)
-        const validK = [], validP = [];
-        for (let i = 0; i < nBins; i++) {
-            if (kBins[i] > 0 && pkBins[i] > 0) {
-                validK.push(kBins[i]);
-                validP.push(pkBins[i]);
+        // Turn one spectrum into log10(k), log10(P) series, dropping empty bins.
+        const seriesOf = (spec) => {
+            const ks = [], ps = [];
+            if (!spec || !(spec.numBins > 0)) return { ks, ps };
+            for (let i = 0; i < spec.numBins; i++) {
+                if (spec.kBins[i] > 0 && spec.pkBins[i] > 0) {
+                    ks.push(spec.kBins[i]);
+                    ps.push(spec.pkBins[i]);
+                }
             }
-        }
-        if (validK.length < 2) return;
+            return { ks, ps };
+        };
 
-        // Log ranges
-        const logK = validK.map(v => Math.log10(v));
-        const logP = validP.map(v => Math.log10(v));
+        const dmSeries = seriesOf(pkData);
+        if (dmSeries.ks.length < 2) return;
+        const logK = dmSeries.ks.map(v => Math.log10(v));
+        const logP = dmSeries.ps.map(v => Math.log10(v));
 
-        let logKMin = Math.min(...logK);
-        let logKMax = Math.max(...logK);
-        let logPMin = Math.min(...logP);
-        let logPMax = Math.max(...logP);
+        // Bias-weighted spectrum (optional). The DM curve stays on the chart as
+        // a fixed reference while the sliders change the biased one.
+        const biasOn = !!(bias && bias.enabled && biasWeights);
+        const biasSeries = biasOn ? seriesOf(pkBiasData) : { ks: [], ps: [] };
+        const biasLogK = biasSeries.ks.map(v => Math.log10(v));
+        const biasLogP = biasSeries.ps.map(v => Math.log10(v));
+        const hasBiasCurve = biasLogK.length >= 2;
+
+        // Log ranges, shared by both curves so they are directly comparable.
+        let logKMin = Math.min(...logK, ...(hasBiasCurve ? biasLogK : []));
+        let logKMax = Math.max(...logK, ...(hasBiasCurve ? biasLogK : []));
+        let logPMin = Math.min(...logP, ...(hasBiasCurve ? biasLogP : []));
+        let logPMax = Math.max(...logP, ...(hasBiasCurve ? biasLogP : []));
 
         // Add padding
         const kPad = (logKMax - logKMin) * 0.05 || 0.1;
@@ -1755,26 +2121,44 @@ function drawStatsChart(ctx, opts) {
             ctx.fillText(label, px, areaY + areaH + 12);
         }
 
-        // Data line
-        ctx.beginPath();
-        ctx.strokeStyle = '#38bdf8';
-        ctx.lineWidth = 2;
-        for (let i = 0; i < validK.length; i++) {
-            const px = toPixX(logK[i]);
-            const py = toPixY(logP[i]);
-            if (i === 0) ctx.moveTo(px, py);
-            else ctx.lineTo(px, py);
-        }
-        ctx.stroke();
-
-        // Data points
-        ctx.fillStyle = '#38bdf8';
-        for (let i = 0; i < validK.length; i++) {
-            const px = toPixX(logK[i]);
-            const py = toPixY(logP[i]);
+        // ---- Curves: DM (reference) first, bias model on top ----
+        const drawPkSeries = (ks, ps, color, radius) => {
             ctx.beginPath();
-            ctx.arc(px, py, 2.5, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            for (let i = 0; i < ks.length; i++) {
+                const px = toPixX(ks[i]);
+                const py = toPixY(ps[i]);
+                if (i === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.stroke();
+            ctx.fillStyle = color;
+            for (let i = 0; i < ks.length; i++) {
+                const px = toPixX(ks[i]);
+                const py = toPixY(ps[i]);
+                ctx.beginPath();
+                ctx.arc(px, py, radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        };
+
+        drawPkSeries(logK, logP, '#38bdf8', 2.5);
+        if (hasBiasCurve) drawPkSeries(biasLogK, biasLogP, '#fbbf24', 2.5);
+
+        // Legend, only when both curves are present
+        if (hasBiasCurve) {
+            ctx.font = '11px Inter';
+            ctx.textAlign = 'left';
+            const legendY = areaY + 12;
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(areaX + 6, legendY - 7, 10, 3);
+            ctx.fillStyle = '#cbd5e1';
+            ctx.fillText(d.pkLegendDm || 'DM', areaX + 20, legendY - 2);
+            ctx.fillStyle = '#fbbf24';
+            ctx.fillRect(areaX + 62, legendY - 7, 10, 3);
+            ctx.fillStyle = '#cbd5e1';
+            ctx.fillText(d.pkLegendBias || 'Bias', areaX + 76, legendY - 2);
         }
 
         // Title
